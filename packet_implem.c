@@ -235,6 +235,15 @@ pkt_status_code pkt_set_payload(pkt_t *pkt, const char *data,
   if (length > MAX_PAYLOAD_SIZE) {
     return E_NOMEM;
   }
+  pkt_status_code err;
+  err = pkt_set_tr(pkt, 0);
+  if (err != PKT_OK) {
+    return err;
+  }
+  err = pkt_set_type(pkt, PTYPE_DATA);
+  if (err != PKT_OK) {
+    return err;
+  }
   memcpy(pkt->payload, data, length);
   pkt_set_length(pkt, length);
   uint32_t crc2 = crc32(0, (Bytef *)data, length);
