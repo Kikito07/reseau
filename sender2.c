@@ -54,20 +54,20 @@ int main(int argc, char *argv[]) {
     printf("you must specify a port\n");
     return -1;
   }
+   peer_addr.sin6_port = htons(atoi(argv[optind]));
+
   //creating my addr
-  struct sockaddr_in6 my_addr;
-  memset(&my_addr, 0, sizeof(peer_addr));
-  peer_addr.sin6_family = AF_INET6;
-  peer_addr.sin6_port = htons(55555);
+  memset(&my_addr, 0, sizeof(my_addr));
+  my_addr.sin6_family = AF_INET6;
+  my_addr.sin6_port = htons(atoi(argv[optind]));
   inet_pton(AF_INET6, "::1", &my_addr.sin6_addr);
-  peer_addr.sin6_port = htons(atoi(argv[optind]));
 
   // packet creation
   pkt_t *pkt = pkt_new();
   char *msg = "\nHello world\n";
   pkt_set_payload(pkt, msg, strlen(msg) + 1);
-  pkt_set_seqnum(pkt, 0);
-  pkt_set_timestamp(pkt, 0);
+  pkt_set_seqnum(pkt, 1);
+  pkt_set_timestamp(pkt, 1);
   int pkt_size = 0;
   pkt_size += predict_header_length(pkt);
   pkt_size += 4;
