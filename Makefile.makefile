@@ -1,8 +1,3 @@
-all: clean cracker tests
-
-cracker: cracker
-	gcc -g src/sender.c -o sender -lpthread -Wall -Werror
-
-clean:
-	rm -f cracker
-
+all : sender
+sender: sender
+	gcc -g sender.c -o sender packet_implem.c utils.c -Wall -Werror -lz

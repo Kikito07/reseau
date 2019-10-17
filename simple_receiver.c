@@ -10,6 +10,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+
+
+
 int main(int argc, char *argv[]) {
 
   int sock_rec;
@@ -32,7 +35,7 @@ int main(int argc, char *argv[]) {
   /*----------------------Ok--------------------------*/
 
   int err2 = 0;
-  char buffer_rec[21];
+  char buffer_rec[528];
   err2 = recv(sock_rec, buffer_rec, 528, 0);
   if (err2 == -1) {
     return -1;
