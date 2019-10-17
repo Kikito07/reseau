@@ -49,7 +49,6 @@ void test_varuint_encode_decode(void)
     varuint_encode(val, data, 2);
     varuint_decode(data, 2, &retval);
     CU_ASSERT_EQUAL(val, retval);
-
     uint8_t tester = 0b00000001;
     varuint_decode(&tester, 1, &retval);
     CU_ASSERT_EQUAL(1,retval);
@@ -71,7 +70,7 @@ int main(void)
         return CU_get_error();
     }
     if (NULL == CU_add_test(pSuite1, "\n\n……… Testing_type……..\n\n", test_pkt_type) ||
-        NULL == CU_add_test(pSuite1, "\n\n……… Testing_type……..\n\n", test_pkt_tr))
+        NULL == CU_add_test(pSuite1, "\n\n……… Testing_tr……..\n\n", test_pkt_tr))
     {
         CU_cleanup_registry();
         return CU_get_error();

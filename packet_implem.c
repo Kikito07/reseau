@@ -35,7 +35,7 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
 
   // decoding first byte
   uint8_t header1 = *data;
-  // decpkt_set_payload(pkt, buffer, 512);oding type
+
   pkt_set_type(pkt, header1 >> 6);
 
   // decoding tr

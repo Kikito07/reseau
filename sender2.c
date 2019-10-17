@@ -11,13 +11,11 @@
 
 char *filename;
 struct sockaddr_in6 peer_addr;
-struct sockaddr_in6 my_addr;
 int port;
 int sock_rec, sock_sen;
 
 int main(int argc, char *argv[]) {
 
-  
   char c;
 
   while ((c = getopt(argc, argv, "f:")) != -1) {
@@ -40,13 +38,13 @@ int main(int argc, char *argv[]) {
     printf("you must specify an adress\n");
     return -1;
   }
-  struct sockaddr_in6 peer_addr;
   memset(&peer_addr, 0, sizeof(peer_addr));
   peer_addr.sin6_family = AF_INET6;
   if (inet_pton(AF_INET6, argv[optind], &peer_addr.sin6_addr) != 1) {
     printf("adresse isn't valid\n");
     return -1;
   }
+  printf("adress : %s\n", argv[optind]);
   optind++;
 
   // retriving port
@@ -54,17 +52,12 @@ int main(int argc, char *argv[]) {
     printf("you must specify a port\n");
     return -1;
   }
-   peer_addr.sin6_port = htons(atoi(argv[optind]));
-
-  //creating my addr
-  memset(&my_addr, 0, sizeof(my_addr));
-  my_addr.sin6_family = AF_INET6;
-  my_addr.sin6_port = htons(atoi(argv[optind]));
-  inet_pton(AF_INET6, "::1", &my_addr.sin6_addr);
+  peer_addr.sin6_port = htons(atoi(argv[optind]));
+  printf("port : %s\n", argv[optind]);
 
   // packet creation
   pkt_t *pkt = pkt_new();
-  char *msg = "\nHello world\n";
+  char *msg = "Hello";
   pkt_set_payload(pkt, msg, strlen(msg) + 1);
   pkt_set_seqnum(pkt, 1);
   pkt_set_timestamp(pkt, 1);
@@ -95,15 +88,6 @@ int main(int argc, char *argv[]) {
   }
   // binding and connecting sockets
   int err;
-  err = bind(sock_rec, (const struct sockaddr *)&my_addr,
-             sizeof(struct sockaddr_in6));
-  if (err == -1) {
-    printf("bind failed\n");
-    printf("%s\n", strerror(errno));
-    close(sock_rec);
-    close(sock_sen);
-    return -1;
-  }
   err = connect(sock_sen, (const struct sockaddr *)&peer_addr,
                 sizeof(struct sockaddr_in6));
   if (err == -1) {
@@ -113,6 +97,8 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   int err_send = 0;
+  //char *msg2 = "kiko\n";
+  //err_send = send(sock_sen, msg, strlen(msg2) + 1, 0);
   err_send = send(sock_sen, buffer_send, length, 0);
   if (err_send == -1) {
     printf("send error :\n");
