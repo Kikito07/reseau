@@ -5,8 +5,6 @@
 #include <stdint.h> /* uintx_t */
 #include <stdio.h>  /* ssize_t */
 
-/* Raccourci pour struct pkt */
-typedef struct pkt pkt_t;
 
 /* Types de paquets */
 typedef enum {
@@ -21,17 +19,30 @@ typedef enum {
 #define MAX_WINDOW_SIZE 31
 
 /* Valeur de retours des fonctions */
+typedef struct __attribute__((__packed__)) pkt {
+  ptypes_t type;
+  uint16_t length;
+  uint8_t TR;
+  uint8_t window;
+  uint8_t L;
+  uint8_t seqnum;
+  uint32_t timestamp;
+  uint32_t crc1;
+  char payload[512];
+  uint32_t crc2;
+}pkt_t;
+
 typedef enum {
-  PKT_OK = 0,     /* Le paquet a ete traite avec succes */
-  E_TYPE,         /* Erreur liee au champs Type */
-  E_TR,           /* Erreur liee au champ TR */
-  E_LENGTH,       /* Erreur liee au champs Length  */
-  E_CRC,          /* CRC invalide */
-  E_WINDOW,       /* Erreur liee au champs Window */
-  E_SEQNUM,       /* Numero de sequence invalide */
-  E_NOMEM,        /* Pas assez de memoire */
-  E_NOHEADER,     /* Le paquet n'a pas de header (trop court) */
-  E_UNCONSISTENT, /* Le paquet est incoherent */
+    PKT_OK = 0,     /* Le paquet a ete traite avec succes */
+    E_TYPE,         /* Erreur liee au champs Type */
+    E_TR,           /* Erreur liee au champ TR */
+    E_LENGTH,       /* Erreur liee au champs Length  */
+    E_CRC,          /* CRC invalide */
+    E_WINDOW,       /* Erreur liee au champs Window */
+    E_SEQNUM,       /* Numero de sequence invalide */
+    E_NOMEM,        /* Pas assez de memoire */
+    E_NOHEADER,     /* Le paquet n'a pas de header (trop court) */
+    E_UNCONSISTENT, /* Le paquet est incoherent */
 } pkt_status_code;
 
 /* Alloue et initialise une struct pkt

@@ -9,20 +9,6 @@
 
 /* Extra #includes */
 /* Your code will be inserted here */
-
-struct __attribute__((__packed__)) pkt {
-  ptypes_t type;
-  uint16_t length;
-  uint8_t TR;
-  uint8_t window;
-  uint8_t L;
-  uint8_t seqnum;
-  uint32_t timestamp;
-  uint32_t crc1;
-  char payload[512];
-  uint32_t crc2;
-};
-
 pkt_t *pkt_new() {
   pkt_t *pkt = malloc(sizeof(pkt_t));
   return pkt;
@@ -86,30 +72,31 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
   else {
     crc1_cal = crc32(0, (Bytef *)(data), h_length);
   }
-  index += 4;
-
   // comparing calculated crc1 with received crc1
+  // printf("crc1 : %u\n", pkt_get_crc1(pkt));
+  // printf("crc1_cal : %u\n", crc1_cal);
   if (pkt_get_crc1(pkt) != crc1_cal) {
     return E_CRC;
   }
 
-  // decoding payload
+  // decoding payload and setting crc2
   if (pkt_get_tr(pkt) == 1) {
     return PKT_OK;
   }
   size_t payload_length = pkt_get_length(pkt);
   char payload[payload_length];
-  memcpy(payload, data + index, payload_length);
+  memcpy(payload, (data + index), payload_length);
+  // printf("payload : %s\n", payload);
   pkt_set_payload(pkt, payload, payload_length);
   index += payload_length;
-
+  // printf("payload_length %u\n", payload_length);
   // decoding crc2
   uint32_t *crc2 = (uint32_t *)(data + index);
-  pkt_set_crc2(pkt, ntohl(*crc2));
-  // calculating crc2
-  uint32_t crc2_cal = crc32(0, (Bytef *)payload, pkt_get_length(pkt));
+  *crc2 = ntohl(*crc2);
   // comparing the two crcs
-  if (pkt_get_crc2(pkt) != crc2_cal) {
+  // printf("crc2 : %u\n", pkt_get_crc2(pkt));
+  // printf("crc2_cal : %u\n", *crc2);
+  if (pkt_get_crc2(pkt) != *crc2) {
     return E_CRC;
   }
   index += 4;
@@ -160,15 +147,16 @@ pkt_status_code pkt_encode(const pkt_t *pkt, char *buf, size_t *len) {
     uint32_t crc1 = crc32(0, (Bytef *)(b), h_length);
     crc1 = htonl(crc1);
     memcpy((buf + index), &crc1, 4);
-    index += 4;
+    // printf("crc11 : %u\n", crc1);
   }
   // tr at 0
   else {
     uint32_t crc1 = crc32(0, (Bytef *)(buf), h_length);
     crc1 = htonl(crc1);
     memcpy((buf + index), &crc1, 4);
-    index += 4;
+    // printf("crc11 : %u\n", crc1);
   }
+  index += 4;
   // encoding payload
   if (pkt_get_tr(pkt) == 1) {
     return PKT_OK;
