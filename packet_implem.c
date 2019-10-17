@@ -72,6 +72,27 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
   pkt_set_crc1(pkt, (*crc1));
   index += 4;
 
+  // calculating crc1
+  uint32_t crc1_cal = 0;
+  int h_length = predict_header_length(pkt);
+  // tr at 1
+  if (pkt_get_tr(pkt) == 1) {
+    uint8_t b[h_length];
+    memcpy(b, data, h_length);
+    *b &= ~(1 << 5);
+    crc1_cal = crc32(0, (Bytef *)(b), h_length);
+  }
+  // tr at 0
+  else {
+    crc1_cal = crc32(0, (Bytef *)(data), h_length);
+  }
+  index += 4;
+
+  // comparing calculated crc1 with received crc1
+  if (pkt_get_crc1(pkt) != crc1_cal) {
+    return E_CRC;
+  }
+
   // decoding payload
   if (pkt_get_tr(pkt) == 1) {
     return PKT_OK;
@@ -85,6 +106,12 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
   // decoding crc2
   uint32_t *crc2 = (uint32_t *)(data + index);
   pkt_set_crc2(pkt, ntohl(*crc2));
+  // calculating crc2
+  uint32_t crc2_cal = crc32(0, (Bytef *)payload, pkt_get_length(pkt));
+  // comparing the two crcs
+  if (pkt_get_crc2(pkt) != crc2_cal) {
+    return E_CRC;
+  }
   index += 4;
   if (len != index) {
     return E_UNCONSISTENT;
