@@ -5,6 +5,7 @@ list_t *init_list() {
   list_t *list = malloc(sizeof(list_t));
   list->first = NULL;
   list->size = 0;
+  list->window = 1;
   return list;
 }
 
@@ -62,4 +63,12 @@ pkt_t *peek(list_t *list) {
   } else {
     return list->first->pkt;
   }
+}
+
+int set_window(list_t *list, int nbm_window){
+  if(list == NULL){
+    return -1;
+  }
+  list->window = nbm_window;
+  return 0;
 }

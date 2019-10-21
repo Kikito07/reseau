@@ -13,6 +13,7 @@ typedef struct List // list structure
 {
   node_t *first; // head of list
   int size;      // number of element in list
+  int window;
 } list_t;
 
 list_t *init_list();
