@@ -34,6 +34,7 @@ int pkt_send(pkt_t *pkt, int sock) {
   if (send(sock, buffer, encoded, 0) == -1) {
     return -1;
   }
+  // printf("seqnum_send %d\n", pkt->seqnum);
   return 0;
 }
 
@@ -46,6 +47,8 @@ int ack_routine(list_t *list, pkt_t *pkt) {
   // searching for seqnum - 1
   for (index = 0; index < list->window; index++) {
     if (pkt_get_seqnum(runner->pkt) == (pkt_get_seqnum(pkt) - 1) % 256) {
+      // printf("seqnum_send ack_routine %d\n", (pkt_get_seqnum(pkt) - 1) %
+      // 256);
       found = true;
       break;
     }
@@ -78,18 +81,26 @@ int nack_routine(list_t *list, pkt_t *pkt, int sock) {
   }
   return 0;
 }
-
 int pkt_receive(list_t *list, int sock) {
+  printf("in receiv\n");
   char buffer[528];
   pkt_t decoded;
   int byte_received;
-  byte_received = recv(sock, buffer, 512, 0);
+  pkt_status_code err;
+  byte_received = recv(sock, buffer, 528, 0);
   if (byte_received == -1) {
     return -1;
   }
-  if (pkt_decode(buffer, byte_received, &decoded) != 0) {
+  printf("Bytes_received : %d\n", byte_received);
+  printf("before decode\n");
+  err = pkt_decode(buffer, byte_received, &decoded);
+  if (err != 0) {
+    printf("err : %d \n", (int)err);
     return -1;
   }
+  printf("after decode\n");
+  printf("seqnum receive : %d\n", pkt_get_seqnum(&decoded));
+
   if (pkt_get_type(&decoded) == PTYPE_DATA) {
     return -1;
   }
@@ -190,19 +201,16 @@ int read_file_and_send(char *filename, int sock) {
   for (;;) {
     ret = poll(fds, 1, timeout_msecs);
     if (ret > 0) {
-      pkt_receive(list, sock);
+      if (fds[0].revents & POLLIN) {
+        printf("inside if\n");
+        pkt_receive(list, sock);
+      }
       fds[0].revents = 0;
     }
     for (int i = 0; i < list->window; i++) {
       node_t *runner = list->first;
-      if (runner->ack == false) {
-        pkt_send(runner->pkt, sock);
-      }
-    }
-    for (int i = 0; i < list->window; i++) {
-      node_t *runner = list->first;
       if (runner->ack == false &&
-          (time(NULL) - pkt_get_timestamp(runner->next->pkt) > 2)) {
+          (time(NULL) - pkt_get_timestamp(runner->pkt) > 2)) {
         pkt_send(runner->pkt, sock);
       }
     }

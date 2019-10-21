@@ -6,7 +6,6 @@ typedef struct Node // node structure
   struct Node *next;
   pkt_t *pkt;
   bool ack;
-
 } node_t;
 
 typedef struct List // list structure

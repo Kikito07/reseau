@@ -11,7 +11,7 @@
 /* Your code will be inserted here */
 pkt_t *pkt_new() {
   pkt_t *pkt = malloc(sizeof(pkt_t));
-  pkt->window = 1;
+  pkt->window = 0;
   return pkt;
 }
 
@@ -22,6 +22,7 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
 
   // decoding first byte
   uint8_t header1 = *data;
+  //printf("header : %u\n", header1);
 
   pkt_set_type(pkt, header1 >> 6);
 
@@ -29,6 +30,7 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
   header1 = header1 << 2;
   header1 = header1 >> 7;
   pkt_set_tr(pkt, header1);
+  //printf("tr : %u\n", pkt_get_tr(pkt));
 
   // decoding window
   header1 = *data;
@@ -58,20 +60,22 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
   *crc1 = ntohl(*crc1);
   pkt_set_crc1(pkt, (*crc1));
   index += 4;
-
+  //printf("crc1 : %u\n", pkt_get_crc1(pkt));
   // calculating crc1
   uint32_t crc1_cal = 0;
-  int h_length = predict_header_length(pkt);
+  ssize_t h_length = predict_header_length(pkt);
   // tr at 1
   if (pkt_get_tr(pkt) == 1) {
     uint8_t b[h_length];
     memcpy(b, data, h_length);
     *b &= ~(1 << 5);
     crc1_cal = crc32(0, (Bytef *)(b), h_length);
+    //printf("crc1_cal : %u\n", crc1_cal);
   }
   // tr at 0
   else {
     crc1_cal = crc32(0, (Bytef *)(data), h_length);
+    //printf("crc1_cal : %u\n", crc1_cal);
   }
   // comparing calculated crc1 with received crc1
   // printf("crc1 : %u\n", pkt_get_crc1(pkt));
@@ -81,9 +85,11 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
   }
 
   // decoding payload and setting crc2
-  if (pkt_get_tr(pkt) == 1) {
+  //printf("tr : %u\n", pkt_get_tr(pkt));
+  if (pkt_get_type(pkt) != 1) {
     return PKT_OK;
   }
+  //printf("after return\n");
   size_t payload_length = pkt_get_length(pkt);
   char payload[payload_length];
   memcpy(payload, (data + index), payload_length);
