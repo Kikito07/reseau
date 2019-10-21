@@ -58,10 +58,31 @@ pkt_t *peek(list_t *list) {
   }
 }
 
+pkt_t *peek_last(list_t *list){
+    if (list == NULL) {
+    return NULL;
+  }
+  if (list->first == NULL) {
+    return NULL;
+  } else {
+    return list->last->pkt;
+  }
+}
+
 int set_window(list_t *list, int nbm_window){
   if(list == NULL){
     return -1;
   }
   list->window = nbm_window;
+  return 0;
+}
+
+int list_move_window(list_t *list){
+  if(list == NULL){
+    return -1;
+  }
+  while(list->first->ack == true){
+    delete(list);
+  }
   return 0;
 }
