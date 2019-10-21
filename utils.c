@@ -214,6 +214,6 @@ int read_file_and_send(char *filename, int sock) {
         pkt_send(runner->pkt, sock);
       }
     }
-    return 0;
   }
+  return 0;
 }
