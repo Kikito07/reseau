@@ -45,8 +45,17 @@ int ack_routine(list_t *list, pkt_t *pkt) {
   bool found = false;
   runner = list->first;
   // searching for seqnum - 1
+  int seqn;
+  if(pkt_get_seqnum(pkt) == 0){
+    seqn = 255;
+  }
+  else
+  {
+    seqn = (pkt_get_seqnum(pkt) - 1) % 256;
+  }
+  
   for (index = 0; index < list->window; index++) {
-    if (pkt_get_seqnum(runner->pkt) == (pkt_get_seqnum(pkt) - 1) % 256) {
+    if (pkt_get_seqnum(runner->pkt) == seqn) {
       // printf("seqnum_send ack_routine %d\n", (pkt_get_seqnum(pkt) - 1) %
       // 256);
       found = true;
@@ -214,6 +223,7 @@ int read_file_and_send(char *filename, int sock) {
         pkt_send(runner->pkt, sock);
       }
     }
+
   }
   return 0;
 }
