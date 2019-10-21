@@ -12,11 +12,12 @@ typedef struct Node // node structure
 typedef struct List // list structure
 {
   node_t *first; // head of list
+  node_t *last;  // tail of list
   int size;      // number of element in list
-  int window;
+  int window;    // window of the reseau
 } list_t;
 
 list_t *init_list();
 pkt_t *peek(list_t *list);
-int push(list_t *list, pkt_t *pkt);
+int add(list_t *list, pkt_t *pkt);
 int delete(list_t *list);
