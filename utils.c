@@ -25,6 +25,32 @@ int real_address(char *address, struct sockaddr_in6 *rval)
   return 0;
 }
 
+int pkt_send(pkt_t *pkt, int sock){
+  char buffer[528];
+  int encoded = 528;
+  pkt_set_timestamp(pkt,time(NULL));
+  if(pkt_encode(pkt,buffer,&encoded) != 0){
+    return -1;
+  }
+  if(send(sock,buffer,encoded,0) == -1){
+    return -1;
+  }
+  return 0;
+}
+
+int pkt_receive(list_t *list,int sock){
+  char buffer[528];
+  int t_0 = time(NULL);
+  while((time(NULL)-t_0) < 2){
+
+  
+  if(recv(sock,buffer,528,0) == -1){
+    return -1;
+  }
+
+
+}
+
 int read_file_and_send(char *filename, int sock)
 {
   int seqn = 0;
@@ -70,7 +96,6 @@ int read_file_and_send(char *filename, int sock)
     pkt_t *pkt = pkt_new();
     pkt_set_payload(pkt, buf_payload, 512);
     pkt_set_seqnum(pkt, seqn);
-    pkt_set_timestamp(pkt, time(NULL));
     sz -= 512;
     size_t encoded_byte = 528;
     if (pkt_encode(pkt, pkt_encoded, &encoded_byte) != 0)
@@ -99,7 +124,6 @@ int read_file_and_send(char *filename, int sock)
     pkt_t *pkt = pkt_new();
     pkt_set_payload(pkt, buf_payload, sz);
     pkt_set_seqnum(pkt, seqn);
-    pkt_set_timestamp(pkt, time(NULL));
     size_t encoded_byte = 528;
     if (pkt_encode(pkt, pkt_encoded, &encoded_byte) != 0)
     {
@@ -115,8 +139,13 @@ int read_file_and_send(char *filename, int sock)
       return -1;
     }
   }
+  while(list->size != 0){
+    for(int i = 0; i<list->window; i++){
+      pkt_send(peek(list),sock);
+    }
 
-  
+  }
+
   return 0;
 }
 
