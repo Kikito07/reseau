@@ -39,15 +39,29 @@ int pkt_send(pkt_t *pkt, int sock) {
 
 int ack_routine(list_t *list, pkt_t *pkt) {
   // settings window according to packet
-  list->window = pkt->window;
-  for (int i = 0; i < list->window; i++) {
-    node_t *runner = list->first;
-    if (runner->ack == false) {
-      if (runner->pkt->seqnum == pkt->seqnum) {
-        runner->ack = true;
-      }
+  int index = 0;
+  node_t *runner = list->first;
+  bool found = false;
+  runner = list->first;
+  // searching for seqnum - 1
+  for (index = 0; index < list->window; index++) {
+    if (pkt_get_seqnum(runner->pkt) == (pkt_get_seqnum(pkt) - 1) % 256) {
+      found = true;
+      break;
     }
   }
+  if (found == false) {
+    return 0;
+  }
+  for (int i = 0; i <= index; i++) {
+    runner = list->first;
+    if (runner->ack == false) {
+      runner->ack = true;
+      // if first element of window is acknowledged we can move the window
+    }
+  }
+  list_move_window(list);//move window
+  list->window = pkt->window;
   return 0;
 }
 
@@ -168,17 +182,30 @@ int read_file_and_send(char *filename, int sock) {
   int i;
   fds[0].fd = sock;
   fds[0].events = POLLIN;
+
+  // sending first packet
+
+  pkt_send(peek(list), sock);
+
   for (;;) {
+    ret = poll(fds, 1, timeout_msecs);
+    if (ret > 0) {
+      pkt_receive(list, sock);
+      fds[0].revents = 0;
+    }
     for (int i = 0; i < list->window; i++) {
       node_t *runner = peek(list);
       if (runner->ack == false) {
         pkt_send(runner, sock);
       }
     }
-    ret = poll(fds, 1, timeout_msecs);
-    if (ret > 0) {
-      pkt_receive(list, sock);
+    for (int i = 0; i < list->window; i++) {
+      node_t *runner = peek(list);
+      if (runner->ack == false &&
+          (time(NULL) - pkt_get_timestamp(runner->next) > 2)) {
+        pkt_send(runner, sock);
+      }
     }
+
+    return 0;
   }
-  return 0;
-}
