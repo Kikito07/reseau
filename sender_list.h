@@ -19,5 +19,7 @@ typedef struct List // list structure
 
 list_t *init_list();
 pkt_t *peek(list_t *list);
+pkt_t *peek_last(list_t *list);
 int add(list_t *list, pkt_t *pkt);
 int delete(list_t *list);
+int list_move_window(list_t *list);
