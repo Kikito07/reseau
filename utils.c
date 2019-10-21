@@ -1,7 +1,7 @@
 #include "utils.h"
+#include "sender_list.h"
 #include <fcntl.h>
 #include <poll.h>
-#include <sender_list.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <time.h>
@@ -26,7 +26,7 @@ int real_address(char *address, struct sockaddr_in6 *rval) {
 
 int pkt_send(pkt_t *pkt, int sock) {
   char buffer[528];
-  int encoded = 528;
+  size_t encoded = 528;
   pkt_set_timestamp(pkt, time(NULL));
   if (pkt_encode(pkt, buffer, &encoded) != 0) {
     return -1;
@@ -60,7 +60,7 @@ int ack_routine(list_t *list, pkt_t *pkt) {
       // if first element of window is acknowledged we can move the window
     }
   }
-  list_move_window(list);//move window
+  list_move_window(list); // move window
   list->window = pkt->window;
   return 0;
 }
@@ -83,7 +83,7 @@ int pkt_receive(list_t *list, int sock) {
   char buffer[528];
   pkt_t decoded;
   int byte_received;
-  byte_recv(sock, buffer, 512, 0);
+  byte_received = recv(sock, buffer, 512, 0);
   if (byte_received == -1) {
     return -1;
   }
@@ -96,7 +96,7 @@ int pkt_receive(list_t *list, int sock) {
   if (pkt_get_type(&decoded) == PTYPE_ACK) {
     return ack_routine(list, &decoded);
   }
-  return nck_routine(list, &decoded, sock);
+  return nack_routine(list, &decoded, sock);
 }
 
 int read_file_and_send(char *filename, int sock) {
@@ -126,7 +126,7 @@ int read_file_and_send(char *filename, int sock) {
   char buf_payload[512];
   int bytes_r;
   int list_err;
-  list_t *list = list_init();
+  list_t *list = init_list();
 
   // reading file and sending it
   while (sz >= 512) {
@@ -145,8 +145,8 @@ int read_file_and_send(char *filename, int sock) {
       close(fd);
       return -1;
     }
-    ssize_t byte_sent;
-    list_err = push(list, pkt);
+    // ssize_t byte_sent;
+    list_err = add(list, pkt);
     if (list_err == -1) {
       close(fd);
       return -1;
@@ -162,14 +162,15 @@ int read_file_and_send(char *filename, int sock) {
     pkt_t *pkt = pkt_new();
     pkt_set_payload(pkt, buf_payload, sz);
     pkt_set_seqnum(pkt, seqn);
+    pkt_set_timestamp(pkt, 0);
     size_t encoded_byte = 528;
     if (pkt_encode(pkt, pkt_encoded, &encoded_byte) != 0) {
       printf("encode error\n");
       close(fd);
       return -1;
     }
-    ssize_t byte_sent;
-    list_err = push(list, pkt);
+    // ssize_t byte_sent;
+    list_err = add(list, pkt);
     if (list_err == -1) {
       close(fd);
       return -1;
@@ -179,7 +180,6 @@ int read_file_and_send(char *filename, int sock) {
   struct pollfd fds[1];
   int timeout_msecs = 3000;
   int ret;
-  int i;
   fds[0].fd = sock;
   fds[0].events = POLLIN;
 
@@ -194,18 +194,18 @@ int read_file_and_send(char *filename, int sock) {
       fds[0].revents = 0;
     }
     for (int i = 0; i < list->window; i++) {
-      node_t *runner = peek(list);
+      node_t *runner = list->first;
       if (runner->ack == false) {
-        pkt_send(runner, sock);
+        pkt_send(runner->pkt, sock);
       }
     }
     for (int i = 0; i < list->window; i++) {
-      node_t *runner = peek(list);
+      node_t *runner = list->first;
       if (runner->ack == false &&
-          (time(NULL) - pkt_get_timestamp(runner->next) > 2)) {
-        pkt_send(runner, sock);
+          (time(NULL) - pkt_get_timestamp(runner->next->pkt) > 2)) {
+        pkt_send(runner->pkt, sock);
       }
     }
-
     return 0;
   }
+}

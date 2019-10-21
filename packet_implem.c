@@ -11,7 +11,7 @@
 /* Your code will be inserted here */
 pkt_t *pkt_new() {
   pkt_t *pkt = malloc(sizeof(pkt_t));
-  pkt->window = 0;
+  pkt->window = 1;
   return pkt;
 }
 

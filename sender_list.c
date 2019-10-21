@@ -13,19 +13,20 @@ list_t *init_list() {
 int add(list_t *list, pkt_t *pkt) {
 
   node_t *new = malloc(sizeof(node_t));
+  new->ack = false;
   new->next = NULL;
   new->pkt = pkt;
   new->ack = false;
   if (list->size == 0) {
     list->first = new;
-    list-> last = new;
+    list->last = new;
     list->size++;
     return 0;
   }
-    list->last->next = new;
-    list->last = list->last->next;
-    list->size++;
-    return 0;
+  list->last->next = new;
+  list->last = list->last->next;
+  list->size++;
+  return 0;
 }
 
 int delete (list_t *list) {
