@@ -30,7 +30,7 @@ typedef struct __attribute__((__packed__)) pkt {
   uint32_t crc1;
   char payload[512];
   uint32_t crc2;
-  
+    
 }pkt_t;
 
 typedef enum {
