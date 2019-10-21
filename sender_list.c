@@ -4,36 +4,28 @@
 list_t *init_list() {
   list_t *list = malloc(sizeof(list_t));
   list->first = NULL;
+  list->last = NULL;
   list->size = 0;
   list->window = 1;
   return list;
 }
 
-int push(list_t *list, pkt_t *pkt) {
+int add(list_t *list, pkt_t *pkt) {
 
   node_t *new = malloc(sizeof(node_t));
   new->next = NULL;
   new->pkt = pkt;
+  new->ack = false;
   if (list->size == 0) {
     list->first = new;
+    list-> last = new;
     list->size++;
     return 0;
   }
-
-  if (list->size == 1) {
-    list->first->next = new;
+    list->last->next = new;
+    list->last = list->last->next;
     list->size++;
     return 0;
-  }
-  node_t *curr = list->first;
-  node_t *curr_next = curr->next;
-  while (curr_next != NULL) {
-    curr = curr_next;
-    curr_next = curr_next->next;
-  }
-  curr->next = new;
-  list->size++;
-  return 0;
 }
 
 int delete (list_t *list) {
@@ -50,6 +42,7 @@ int delete (list_t *list) {
   list->size--;
   if (list->size == 0) {
     list->first = NULL;
+    list->last = NULL;
   }
   return 0;
 }

@@ -12,12 +12,25 @@ int main() {
   pkt_set_payload(pkt4, "4", 2);
   pkt_t *pkt5 = pkt_new();
   pkt_set_payload(pkt5, "5", 2);
-  push(my_list, pkt1);
-  push(my_list, pkt2);
-  push(my_list, pkt3);
-  push(my_list, pkt4);
-  push(my_list, pkt5);
+
   pkt_t *printer;
+
+  add(my_list, pkt1);
+  printer = peek2(my_list);
+  printf("%s\n", pkt_get_payload(printer));
+  add(my_list, pkt2);
+  printer = peek2(my_list);
+  printf("%s\n", pkt_get_payload(printer));
+  add(my_list, pkt3);
+  printer = peek2(my_list);
+  printf("%s\n", pkt_get_payload(printer));
+  add(my_list, pkt4);
+  printer = peek2(my_list);
+  printf("%s\n", pkt_get_payload(printer));
+  add(my_list, pkt5);
+  printer = peek2(my_list);
+  printf("%s\n", pkt_get_payload(printer));
+
   printer = peek(my_list);
   printf("%s\n", pkt_get_payload(printer));
   delete (my_list);
@@ -31,6 +44,8 @@ int main() {
   printf("%s\n", pkt_get_payload(printer));
   delete (my_list);
   printer = peek(my_list);
+  printf("%s\n", pkt_get_payload(printer));
+  printer = peek2(my_list);
   printf("%s\n", pkt_get_payload(printer));
   delete (my_list);
   if (my_list->first == NULL) {
