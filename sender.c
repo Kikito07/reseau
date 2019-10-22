@@ -15,7 +15,7 @@
 char *filename = NULL;
 struct sockaddr_in6 peer_addr;
 int port;
-int sock_sen, sock_rec;
+int sock_sen;
 
 int main(int argc, char *argv[]) {
 
@@ -56,16 +56,10 @@ int main(int argc, char *argv[]) {
   peer_addr.sin6_port = htons(atoi(argv[optind]));
   printf("port : %s\n", argv[optind]);
 
-  // creating sockets
-  sock_rec = socket(AF_INET6, SOCK_DGRAM, 0);
-  if (sock_rec == -1) {
-    printf("sock_rec fail\n");
-    return -1;
-  }
+  // creating socket
   sock_sen = socket(AF_INET6, SOCK_DGRAM, 0);
   if (sock_sen == -1) {
     printf("sock_sens\n");
-    close(sock_rec);
     return -1;
   }
   // binding and connecting sockets
@@ -74,7 +68,6 @@ int main(int argc, char *argv[]) {
                 sizeof(struct sockaddr_in6));
   if (err == -1) {
     printf("connect failed\n");
-    close(sock_rec);
     close(sock_sen);
     return -1;
   }
@@ -87,7 +80,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   printf("sent \n");
-  close(sock_rec);
   close(sock_sen);
+  free(filename);
   return 0;
 }

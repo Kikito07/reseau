@@ -7,6 +7,9 @@
 #include <time.h>
 #include <unistd.h>
 
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
+
 int real_address(char *address, struct sockaddr_in6 *rval) {
   struct addrinfo hints, *result;
 
@@ -17,10 +20,12 @@ int real_address(char *address, struct sockaddr_in6 *rval) {
   hints.ai_protocol = 0;
 
   int err = getaddrinfo(address, NULL, &hints, &result);
+
   if (err != 0) {
     return -1;
   }
   memcpy(rval, result->ai_addr, result->ai_addrlen);
+  freeaddrinfo(result);
   return 0;
 }
 
@@ -38,6 +43,7 @@ int pkt_send(pkt_t *pkt, int sock) {
   return 0;
 }
 
+//-1 on error pkt window on succes
 int ack_routine(list_t *list, pkt_t *pkt) {
   // settings window according to packet
   int index = 0;
@@ -45,17 +51,14 @@ int ack_routine(list_t *list, pkt_t *pkt) {
   bool found = false;
   runner = list->first;
   // searching for seqnum - 1
-  int seqn;
-  if(pkt_get_seqnum(pkt) == 0){
-    seqn = 255;
+  int seq_mod;
+  if (pkt_get_seqnum(pkt) == 0) {
+    seq_mod = 255;
+  } else {
+    seq_mod = (pkt_get_seqnum(pkt) - 1) % 256;
   }
-  else
-  {
-    seqn = (pkt_get_seqnum(pkt) - 1) % 256;
-  }
-  
   for (index = 0; index < list->window; index++) {
-    if (pkt_get_seqnum(runner->pkt) == seqn) {
+    if (pkt_get_seqnum(runner->pkt) == seq_mod) {
       // printf("seqnum_send ack_routine %d\n", (pkt_get_seqnum(pkt) - 1) %
       // 256);
       found = true;
@@ -72,14 +75,16 @@ int ack_routine(list_t *list, pkt_t *pkt) {
       // if first element of window is acknowledged we can move the window
     }
   }
-  list_move_window(list); // move window
-  list->window = pkt->window;
-  return 0;
+  // move window
+  if (list_is_empty(list) == 1) {
+    list_move_window(list);
+  }
+  return pkt_get_window(pkt);
 }
 
+//-1 on error pkt window on succes
 int nack_routine(list_t *list, pkt_t *pkt, int sock) {
   // settings window according to packet
-  list->window = pkt->window;
   for (int i = 0; i < list->window; i++) {
     node_t *runner = list->first;
     if (runner->pkt->seqnum == pkt->seqnum) {
@@ -88,7 +93,7 @@ int nack_routine(list_t *list, pkt_t *pkt, int sock) {
       }
     }
   }
-  return 0;
+  return pkt_get_seqnum(pkt);
 }
 int pkt_receive(list_t *list, int sock) {
   printf("in receiv\n");
@@ -120,7 +125,7 @@ int pkt_receive(list_t *list, int sock) {
 }
 
 int read_file_and_send(char *filename, int sock) {
-  int seqn = 0;
+
   // opening file
   if (filename == NULL) {
     printf("filename is NULL\n");
@@ -140,90 +145,53 @@ int read_file_and_send(char *filename, int sock) {
     close(fd);
     return -1;
   }
-  // initializing variables
-
-  char pkt_encoded[528];
-  char buf_payload[512];
-  int bytes_r;
-  int list_err;
+  // initializing list and seqnum
   list_t *list = init_list();
+  int seqn = 0;
 
-  // reading file and sending it
-  while (sz >= 512) {
-    bytes_r = read(fd, buf_payload, 512);
-    if (bytes_r == -1) {
-      printf("read fail\n");
-      return -1;
-    }
-    pkt_t *pkt = pkt_new();
-    pkt_set_payload(pkt, buf_payload, 512);
-    pkt_set_seqnum(pkt, seqn);
-    sz -= 512;
-    size_t encoded_byte = 528;
-    if (pkt_encode(pkt, pkt_encoded, &encoded_byte) != 0) {
-      printf("encode error\n");
-      close(fd);
-      return -1;
-    }
-    // ssize_t byte_sent;
-    list_err = add(list, pkt);
-    if (list_err == -1) {
-      close(fd);
-      return -1;
-    }
-    seqn = (seqn + 1) % 256;
-  }
-  if (sz > 0) {
-    bytes_r = read(fd, buf_payload, sz);
-    if (bytes_r == -1) {
-      printf("read fail\n");
-      return -1;
-    }
-    pkt_t *pkt = pkt_new();
-    pkt_set_payload(pkt, buf_payload, sz);
-    pkt_set_seqnum(pkt, seqn);
-    pkt_set_timestamp(pkt, 0);
-    size_t encoded_byte = 528;
-    if (pkt_encode(pkt, pkt_encoded, &encoded_byte) != 0) {
-      printf("encode error\n");
-      close(fd);
-      return -1;
-    }
-    // ssize_t byte_sent;
-    list_err = add(list, pkt);
-    if (list_err == -1) {
-      close(fd);
-      return -1;
-    }
+  // filling list
+  if (list_fill(list, fd, &sz, &seqn) != 0) {
+    printf("error list_fill\n");
   }
 
+  // usefull for poll
   struct pollfd fds[1];
   int timeout_msecs = 3000;
   int ret;
   fds[0].fd = sock;
   fds[0].events = POLLIN;
+  // window receiver
+  int w_receiver = 0;
 
   // sending first packet
-
   pkt_send(peek(list), sock);
 
-  for (;;) {
-    ret = poll(fds, 1, timeout_msecs);
-    if (ret > 0) {
-      if (fds[0].revents & POLLIN) {
-        printf("inside if\n");
-        pkt_receive(list, sock);
+  while (list_is_empty(list) == 1 && sz > 0) {
+    for (;;) {
+      ret = poll(fds, 1, timeout_msecs);
+      if (ret > 0) {
+        if (fds[0].revents & POLLIN) {
+          printf("inside if\n");
+          w_receiver = pkt_receive(list, sock);
+          if (list_is_empty(list) == 1 && sz > 0) {
+            return 0;
+          }
+          list_fill(list, fd, &sz, &seqn);
+          list->window = MIN(w_receiver, list->size);
+          fds[0].revents = 0;
+          return 0;
+        }
+        fds[0].revents = 0;
       }
-      fds[0].revents = 0;
-    }
-    for (int i = 0; i < list->window; i++) {
       node_t *runner = list->first;
-      if (runner->ack == false &&
-          (time(NULL) - pkt_get_timestamp(runner->pkt) > 2)) {
-        pkt_send(runner->pkt, sock);
+      for (int i = 0; i < list->window; i++) {
+        if (runner->ack == false &&
+            (time(NULL) - pkt_get_timestamp(runner->pkt) > 2)) {
+          pkt_send(runner->pkt, sock);
+        }
+        runner = runner->next;
       }
     }
-
   }
   return 0;
 }
