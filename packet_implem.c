@@ -22,7 +22,7 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
 
   // decoding first byte
   uint8_t header1 = *data;
-  //printf("header : %u\n", header1);
+  // printf("header : %u\n", header1);
 
   pkt_set_type(pkt, header1 >> 6);
 
@@ -30,7 +30,7 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
   header1 = header1 << 2;
   header1 = header1 >> 7;
   pkt_set_tr(pkt, header1);
-  //printf("tr : %u\n", pkt_get_tr(pkt));
+  // printf("tr : %u\n", pkt_get_tr(pkt));
 
   // decoding window
   header1 = *data;
@@ -60,7 +60,7 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
   *crc1 = ntohl(*crc1);
   pkt_set_crc1(pkt, (*crc1));
   index += 4;
-  //printf("crc1 : %u\n", pkt_get_crc1(pkt));
+  // printf("crc1 : %u\n", pkt_get_crc1(pkt));
   // calculating crc1
   uint32_t crc1_cal = 0;
   ssize_t h_length = predict_header_length(pkt);
@@ -70,12 +70,12 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
     memcpy(b, data, h_length);
     *b &= ~(1 << 5);
     crc1_cal = crc32(0, (Bytef *)(b), h_length);
-    //printf("crc1_cal : %u\n", crc1_cal);
+    // printf("crc1_cal : %u\n", crc1_cal);
   }
   // tr at 0
   else {
     crc1_cal = crc32(0, (Bytef *)(data), h_length);
-    //printf("crc1_cal : %u\n", crc1_cal);
+    // printf("crc1_cal : %u\n", crc1_cal);
   }
   // comparing calculated crc1 with received crc1
   // printf("crc1 : %u\n", pkt_get_crc1(pkt));
@@ -85,11 +85,11 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
   }
 
   // decoding payload and setting crc2
-  //printf("tr : %u\n", pkt_get_tr(pkt));
+  // printf("tr : %u\n", pkt_get_tr(pkt));
   if (pkt_get_type(pkt) != 1) {
     return PKT_OK;
   }
-  //printf("after return\n");
+  // printf("after return\n");
   size_t payload_length = pkt_get_length(pkt);
   char payload[payload_length];
   memcpy(payload, (data + index), payload_length);
@@ -166,6 +166,13 @@ pkt_status_code pkt_encode(const pkt_t *pkt, char *buf, size_t *len) {
   index += 4;
   // encoding payload
   if (pkt_get_tr(pkt) == 1) {
+    *len = index;
+    return PKT_OK;
+  }
+  if (pkt_get_length(pkt) == 0) {
+    *((uint32_t *)(buf + index)) = 0;
+    index += 4;
+    *len = index;
     return PKT_OK;
   }
   uint16_t l = pkt_get_length(pkt);
@@ -257,6 +264,7 @@ pkt_status_code pkt_set_payload(pkt_t *pkt, const char *data,
   if (length > MAX_PAYLOAD_SIZE) {
     return E_NOMEM;
   }
+
   pkt_status_code err;
   err = pkt_set_tr(pkt, 0);
   if (err != PKT_OK) {
@@ -265,6 +273,9 @@ pkt_status_code pkt_set_payload(pkt_t *pkt, const char *data,
   err = pkt_set_type(pkt, PTYPE_DATA);
   if (err != PKT_OK) {
     return err;
+  }
+  if (length == 0) {
+    return PKT_OK;
   }
   memcpy(pkt->payload, data, length);
   pkt_set_length(pkt, length);

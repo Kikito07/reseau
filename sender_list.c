@@ -10,7 +10,7 @@ list_t *init_list() {
   list->first = NULL;
   list->last = NULL;
   list->size = 0;
-  list->window = 0;
+  list->window = 1;
   return list;
 }
 
@@ -87,12 +87,16 @@ int list_move_window(list_t *list) {
     return -1;
   }
   while (list->first != NULL && list->first->ack == true) {
+    printf("inside list_move_window\n");
     delete (list);
+    printf("after delete\n");
   }
+  printf("out of while loop\n");
   if (list->first == NULL) {
+    printf("list->first == NULL\n");
     return -2;
   }
-
+  printf("before return list_move_window\n");
   return 0;
 }
 
@@ -104,13 +108,10 @@ int list_is_empty(list_t *list) {
     return 0;
   }
   return 1;
-  if (list_is_empty(list) == 1) {
-    list_move_window(list);
-  }
 }
 
 int list_fill(list_t *list, int fd, int *bytes_left, int *seqn) {
-  
+
   if (bytes_left == 0) {
     printf("error bytes_left\n");
     return -1;
@@ -123,7 +124,7 @@ int list_fill(list_t *list, int fd, int *bytes_left, int *seqn) {
     // reading file and filling list
     while (*bytes_left >= 512) {
       bytes_r = read(fd, buf_payload, 512);
-      
+
       if (bytes_r == -1) {
         printf("read fail\n");
         return -1;
@@ -132,9 +133,10 @@ int list_fill(list_t *list, int fd, int *bytes_left, int *seqn) {
       pkt_set_payload(pkt, buf_payload, 512);
       pkt_set_seqnum(pkt, *seqn);
       pkt_set_timestamp(pkt, 0);
+      pkt_set_window(pkt, 0);
       *bytes_left -= 512;
       list_err = list_add(list, pkt);
-      printf("list size %d\n", list->size);
+      //printf("list size %d\n", list->size);
       if (list_err == -1) {
         printf("list_add fail\n");
         close(fd);
