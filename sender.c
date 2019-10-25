@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
     return -1;
   }
   peer_addr.sin6_port = htons(atoi(argv[optind]));
-  //printf("port : %s\n", argv[optind]);
+  // printf("port : %s\n", argv[optind]);
 
   // creating socket
   sock_sen = socket(AF_INET6, SOCK_DGRAM, 0);
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
     printf("fail to send\n");
     return -1;
   }
-  printf("sent \n");
+  // printf("sent \n");
   close(sock_sen);
   free(filename);
   return 0;

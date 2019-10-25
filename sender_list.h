@@ -24,3 +24,4 @@ int delete (list_t *list);
 int list_move_window(list_t *list);
 int list_is_empty(list_t *list);
 int list_fill(list_t *list, int fd, int *bytes_left, int *seqn);
+void print_list(list_t *list);

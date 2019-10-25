@@ -87,16 +87,16 @@ int list_move_window(list_t *list) {
     return -1;
   }
   while (list->first != NULL && list->first->ack == true) {
-    printf("inside list_move_window\n");
+    // printf("inside list_move_window\n");
     delete (list);
-    printf("after delete\n");
+    // printf("after delete\n");
   }
-  printf("out of while loop\n");
+  // printf("out of while loop\n");
   if (list->first == NULL) {
-    printf("list->first == NULL\n");
+    // printf("list->first == NULL\n");
     return -2;
   }
-  printf("before return list_move_window\n");
+  // printf("before return list_move_window\n");
   return 0;
 }
 
@@ -110,19 +110,26 @@ int list_is_empty(list_t *list) {
   return 1;
 }
 
+void print_list(list_t *list) {
+  node_t *runner = list->first;
+  while (runner != NULL) {
+    printf("seq : %d\n", runner->pkt->seqnum);
+  }
+}
+
 int list_fill(list_t *list, int fd, int *bytes_left, int *seqn) {
 
   if (bytes_left == 0) {
     printf("error bytes_left\n");
     return -1;
   }
-  while (list->size <= 32 && *bytes_left > 0) {
+  while (list->size <= 31 && *bytes_left > 0) {
     char buf_payload[512];
     int bytes_r;
     int list_err;
 
     // reading file and filling list
-    while (*bytes_left >= 512) {
+    if (*bytes_left >= 512) {
       bytes_r = read(fd, buf_payload, 512);
 
       if (bytes_r == -1) {
@@ -136,15 +143,14 @@ int list_fill(list_t *list, int fd, int *bytes_left, int *seqn) {
       pkt_set_window(pkt, 0);
       *bytes_left -= 512;
       list_err = list_add(list, pkt);
-      //printf("list size %d\n", list->size);
+      // printf("list size %d\n", list->size);
       if (list_err == -1) {
         printf("list_add fail\n");
         close(fd);
         return -1;
       }
       *seqn = (*seqn + 1) % 256;
-    }
-    if (*bytes_left > 0) {
+    } else if (*bytes_left > 0) {
       bytes_r = read(fd, buf_payload, *bytes_left);
       if (bytes_r == -1) {
         printf("read fail\n");
@@ -163,7 +169,6 @@ int list_fill(list_t *list, int fd, int *bytes_left, int *seqn) {
       }
       *seqn = (*seqn + 1) % 256;
     }
-    return 0;
   }
   return 0;
 }
