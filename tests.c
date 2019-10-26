@@ -290,19 +290,19 @@ void test_add_list(void)
 
     pkt_t *printer;
 
-    add(my_list, pkt1);
+    list_add(my_list, pkt1);
     printer = peek_last(my_list);
     CU_ASSERT_STRING_EQUAL(pkt_get_payload(printer), "1");
-    add(my_list, pkt2);
+    list_add(my_list, pkt2);
     printer = peek_last(my_list);
     CU_ASSERT_STRING_EQUAL(pkt_get_payload(printer), "2");
-    add(my_list, pkt3);
+    list_add(my_list, pkt3);
     printer = peek_last(my_list);
     CU_ASSERT_STRING_EQUAL(pkt_get_payload(printer), "3");
-    add(my_list, pkt4);
+    list_add(my_list, pkt4);
     printer = peek_last(my_list);
     CU_ASSERT_STRING_EQUAL(pkt_get_payload(printer), "4");
-    add(my_list, pkt5);
+    list_add(my_list, pkt5);
     printer = peek_last(my_list);
     CU_ASSERT_STRING_EQUAL(pkt_get_payload(printer), "5");
 }
@@ -324,11 +324,11 @@ void test_delete_list(void)
 
     pkt_t *printer;
 
-    add(my_list, pkt1);
-    add(my_list, pkt2);
-    add(my_list, pkt3);
-    add(my_list, pkt4);
-    add(my_list, pkt5);
+    list_add(my_list, pkt1);
+    list_add(my_list, pkt2);
+    list_add(my_list, pkt3);
+    list_add(my_list, pkt4);
+    list_add(my_list, pkt5);
 
     printer = peek(my_list);
     CU_ASSERT_STRING_EQUAL(pkt_get_payload(printer), "1");

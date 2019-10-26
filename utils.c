@@ -36,7 +36,7 @@ int real_address(char *address, struct sockaddr_in6 *rval) {
 int end_connection(int sock, int *seqn) {
   // usefull for poll
   struct pollfd fds[1];
-  int timeout_msecs = 3000;
+  int timeout_msecs = 2000;
   int ret;
   fds[0].fd = sock;
   fds[0].events = POLLIN;
@@ -59,6 +59,9 @@ int end_connection(int sock, int *seqn) {
   // printf("inside end_connection\n");
   while (ender_list->size > 0) {
     ret = poll(fds, 1, timeout_msecs);
+    if (ret == 0) {
+      break;
+    }
     if (ret > 0) {
       if (fds[0].revents & POLLIN) {
         pkt_receive(ender_list, sock);
@@ -66,7 +69,7 @@ int end_connection(int sock, int *seqn) {
       }
     }
   }
-  free(ender_list);
+  free_list(ender_list);
   close(sock);
   return 0;
 }

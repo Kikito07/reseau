@@ -14,6 +14,17 @@ list_t *init_list() {
   return list;
 }
 
+int free_list(list_t *list) {
+  if (list == NULL) {
+    return 0;
+  }
+  while (list->size > 0) {
+    delete(list);
+  }
+  free(list);
+  return 0;
+}
+
 int list_add(list_t *list, pkt_t *pkt) {
 
   node_t *new = malloc(sizeof(node_t));
