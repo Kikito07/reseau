@@ -36,7 +36,7 @@ int real_address(char *address, struct sockaddr_in6 *rval) {
 int end_connection(int sock, int *seqn) {
   // usefull for poll
   struct pollfd fds[1];
-  int timeout_msecs = 2000;
+  int timeout_msecs = 0;
   int ret;
   fds[0].fd = sock;
   fds[0].events = POLLIN;
@@ -152,10 +152,11 @@ int nack_routine(list_t *list, pkt_t *pkt, int sock) {
     }
     runner = runner->next;
   }
-  return pkt->window;
+  return 1;
 }
 int pkt_receive(list_t *list, int sock) {
 
+  printf("pkt received\n");
   char buffer[528];
   pkt_t decoded;
   int byte_received;
@@ -171,6 +172,7 @@ int pkt_receive(list_t *list, int sock) {
   }
 
   if (pkt_get_type(&decoded) == PTYPE_DATA) {
+    printf("wrong type\n");
     return -1;
   }
   if (pkt_get_type(&decoded) == PTYPE_ACK) {
@@ -193,7 +195,7 @@ int read_file_and_send(int fd, int sock) {
 
   // usefull for poll
   struct pollfd fds[1];
-  int timeout_msecs = 3000;
+  int timeout_msecs = 0;
   int ret;
   fds[0].fd = sock;
   fds[0].events = POLLIN;
@@ -203,18 +205,26 @@ int read_file_and_send(int fd, int sock) {
   // sending first packet
   pkt_send(peek(list), sock);
   for (;;) {
+    printf("inside for loop\n");
+    printf("before poll\n");
     ret = poll(fds, 1, timeout_msecs);
+    printf("afte poll\n");
+    
     if (ret > 0) {
       if (fds[0].revents & POLLIN) {
+        printf("inside pollin\n");
         w_receiver = pkt_receive(list, sock);
         // if receiver is overloaded wait
         if (w_receiver == 0) {
+          printf("window received = 0\n");
           usleep(100);
           w_receiver = 1;
         }
+        printf("before list_fill\n");
         if (list_fill(list, fd, &seqn) == -1) {
           fprintf(stderr, "error list_fill\n");
         }
+        printf("after list_fill\n");
         if (list_is_empty(list) == 1 && list->marker == true) {
           free(list);
           end_connection(sock, &seqn);
@@ -230,6 +240,7 @@ int read_file_and_send(int fd, int sock) {
       if (runner->ack == false &&
           (uint32_t)time(NULL) - (uint32_t)pkt_get_timestamp(runner->pkt) >
               (uint32_t)1) {
+                printf("seqn = %d\n", runner->pkt->seqnum);
         if (pkt_send(runner->pkt, sock) != -1) {
         }
       }
