@@ -11,4 +11,5 @@ printf '\n%s' ".....veryfing that sender is working a network with packet loses.
 ./receiver -o "lorem_received_imperfect.txt" :: 55555 &
 ./sender -f lorem_imperfect.txt ::1 55554
 printf '\n%s\n' ".....using diff command on the two files : " &
-diff lorem_received.txt lorem_received_imperfect.txt
+diff lorem_imperfect.txt lorem_received_imperfect.txt
+

@@ -13,6 +13,7 @@ list_t *init_list() {
   list->size = 0;
   list->window = 1;
   list->marker = false;
+  list->r_timer = 1000000;
   return list;
 }
 
@@ -143,27 +144,30 @@ int list_fill(list_t *list, int fd, int *seqn) {
   int list_err;
 
   // reading file and filling list
-  bytes_r = read(fd, buf_payload, 512);
+  while (list->size < 31) {
+    bytes_r = read(fd, buf_payload, 512);
 
-  if (bytes_r == -1) {
-    fprintf(stderr,"read fail\n");
-    return -1;
+    if (bytes_r == -1) {
+      fprintf(stderr, "read fail\n");
+      return -1;
+    }
+    if (bytes_r == 0) {
+      list->marker = true;
+      return 0;
+    }
+    printf("bytes_read %d\n", bytes_r);
+    pkt_t *pkt = pkt_new();
+    pkt_set_payload(pkt, buf_payload, (uint16_t)bytes_r);
+    // printf("pkt->payload %d\n", pkt_get_length(pkt));
+    pkt_set_seqnum(pkt, *seqn);
+    pkt_set_window(pkt, 0);
+    list_err = list_add(list, pkt);
+    if (list_err == -1) {
+      fprintf(stderr, "list_add fail\n");
+      close(fd);
+      return -1;
+    }
+    *seqn = (*seqn + 1) % 256;
   }
-  if (bytes_r == 0) {
-    list->marker = true;
-    return 0;
-  }
-  pkt_t *pkt = pkt_new();
-  pkt_set_payload(pkt, buf_payload, bytes_r);
-  pkt_set_seqnum(pkt, *seqn);
-  pkt_set_timestamp(pkt, 0);
-  pkt_set_window(pkt, 0);
-  list_err = list_add(list, pkt);
-  if (list_err == -1) {
-    fprintf(stderr,"list_add fail\n");
-    close(fd);
-    return -1;
-  }
-  *seqn = (*seqn + 1) % 256;
   return 0;
 }

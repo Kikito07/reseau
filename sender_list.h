@@ -15,6 +15,7 @@ typedef struct List // list structure
   int size;      // number of element in list
   int window;    // window of the reseau
   bool marker;
+  unsigned long r_timer;
 } list_t;
 
 list_t *init_list();

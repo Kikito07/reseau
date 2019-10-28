@@ -3,6 +3,7 @@
 #include <poll.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
@@ -10,6 +11,20 @@
 // calculate de minimum between two int
 int min(int x, int y) {
   if (x <= y) {
+    return x;
+  }
+  return y;
+}
+
+int min_u(int x, int y) {
+  if (x <= y) {
+    return x;
+  }
+  return y;
+}
+
+uint32_t max(uint32_t x, uint32_t y) {
+  if (x >= y) {
     return x;
   }
   return y;
@@ -41,6 +56,7 @@ int real_address(char *address, struct sockaddr_in6 *rval) {
 @return : return 0 on sucess */
 int end_connection(int sock, int *seqn) {
   // variable used for poll
+  printf("end_connecion\n");
   struct pollfd fds[1];
   int timeout_msecs = 4000;
   int ret;
@@ -52,8 +68,9 @@ int end_connection(int sock, int *seqn) {
 
   pkt_set_seqnum(ender, *seqn);
   pkt_set_window(ender, 0);
-  pkt_set_payload(ender, NULL, 0);
-
+  pkt_set_length(ender, 0);
+  pkt_set_tr(ender, 0);
+  pkt_set_type(ender, PTYPE_DATA);
   list_t *ender_list = init_list();
   list_add(ender_list, ender);
   err = pkt_send(ender, sock);
@@ -90,13 +107,17 @@ int pkt_send(pkt_t *pkt, int sock) {
   char buffer[528];
   size_t encoded = 528;
   // usefull for retransmission
-  pkt_set_timestamp(pkt, time(NULL));
+  // printf("clock %lu\n", (clock() & 0xFFFFFFFF)/CLOCKS_PER_SEC);
+  pkt_set_timestamp(pkt, clock() & 0xFFFFFFFF);
   if (pkt_encode(pkt, buffer, &encoded) != 0) {
     fprintf(stderr, "encode fail\n");
     return -1;
   }
   if (send(sock, buffer, encoded, 0) == -1) {
     fprintf(stderr, "send fail\n");
+  }
+  if (pkt->sent == false) {
+    pkt->sent = true;
   }
   return 0;
 }
@@ -122,6 +143,8 @@ int ack_routine(list_t *list, pkt_t *pkt) {
   while (runner != NULL) {
     if (runner->pkt->seqnum == seq_mod) {
       found = true;
+      list->r_timer = min_u(2 * CLOCKS_PER_SEC, 3 * ((0xFFFFFFFF & clock()) -
+                                                     runner->pkt->timestamp));
       break;
     }
     runner = runner->next;
@@ -131,6 +154,7 @@ int ack_routine(list_t *list, pkt_t *pkt) {
   if (found == false) {
     return pkt->window;
   }
+
   runner = list->first;
   for (int i = 0; i <= index; i++) {
     if (runner->ack == false) {
@@ -156,6 +180,8 @@ int nack_routine(list_t *list, pkt_t *pkt, int sock) {
   node_t *runner = list->first;
   for (int i = 0; i < list->window; i++) {
     if (runner->pkt->seqnum == pkt->seqnum) {
+      list->r_timer = min_u(2 * CLOCKS_PER_SEC, 2 * (0xFFFFFFFF & clock()) -
+                                                    runner->pkt->timestamp);
       if (pkt_send(runner->pkt, sock) == -1) {
         fprintf(stderr, "send fail\n");
       }
@@ -227,6 +253,8 @@ int read_file_and_send(int fd, int sock) {
   // sending first packet
   pkt_send(peek(list), sock);
   for (;;) {
+    printf("size %d\n", list->size);
+    printf("window : %d\n", list->window);
     ret = poll(fds, 1, timeout_msecs);
     if (ret > 0) {
       if (fds[0].revents & POLLIN) {
@@ -250,13 +278,12 @@ int read_file_and_send(int fd, int sock) {
       fds[0].revents = 0;
     }
     node_t *runner = list->first;
+    // printf("r_timer : %lu\n", list->r_timer /  CLOCKS_PER_SEC);
     for (int i = 0; i < list->window; i++) {
-
-      if (runner->ack == false &&
-          (uint32_t)time(NULL) - (uint32_t)pkt_get_timestamp(runner->pkt) >
-              (uint32_t)1) {
-        if (pkt_send(runner->pkt, sock) != -1) {
-        }
+      if ((runner->ack == false &&
+           ((clock() & 0xFFFFFFFF) - runner->pkt->timestamp) > list->r_timer) ||
+          runner->pkt->sent == false) {
+        pkt_send(runner->pkt, sock);
       }
       runner = runner->next;
     }

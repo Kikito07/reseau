@@ -12,6 +12,8 @@
 pkt_t *pkt_new() {
   pkt_t *pkt = malloc(sizeof(pkt_t));
   pkt->window = 0;
+  pkt->timestamp = 0;
+  pkt->sent = false;
   return pkt;
 }
 
@@ -51,7 +53,7 @@ pkt_status_code pkt_decode(const char *data, const size_t len, pkt_t *pkt) {
   index++;
 
   // decoding timestamp
-  uint32_t timestamp = *(uint32_t *)(data + index);
+  __suseconds_t timestamp = *(uint32_t *)(data + index);
   pkt_set_timestamp(pkt, timestamp);
   index += 4;
 
@@ -122,7 +124,11 @@ pkt_status_code pkt_encode(const pkt_t *pkt, char *buf, size_t *len) {
     pkt_size += pkt_get_length(pkt);
     pkt_size += 4;
   }
+
   if ((*len) < pkt_size) {
+    printf("error memory\n");
+    printf("len : %ld", *len);
+    printf("pkt_size %ld\n", pkt_size);
     return E_NOMEM;
   }
   // index
@@ -165,7 +171,7 @@ pkt_status_code pkt_encode(const pkt_t *pkt, char *buf, size_t *len) {
   }
   index += 4;
   // encoding payload
-  if (pkt_get_tr(pkt) == 1) {
+  if (pkt_get_tr(pkt) == 1 || pkt_get_length(pkt) == 0) {
     *len = index;
     return PKT_OK;
   }
@@ -243,7 +249,7 @@ pkt_status_code pkt_set_length(pkt_t *pkt, const uint16_t length) {
   return PKT_OK;
 }
 
-pkt_status_code pkt_set_timestamp(pkt_t *pkt, const uint32_t timestamp) {
+pkt_status_code pkt_set_timestamp(pkt_t *pkt, uint32_t timestamp) {
   pkt->timestamp = timestamp;
   return PKT_OK;
 }
