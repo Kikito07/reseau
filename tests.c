@@ -37,15 +37,12 @@ void test_pkt_get_tr(void)
 {
     pkt_t *pkt = pkt_new();
     pkt_set_tr(pkt, 1);
-    CU_ASSERT_EQUAL(pkt, 1);
+    CU_ASSERT_EQUAL(pkt_get_tr(pkt), 1);
     pkt_set_tr(pkt, 0);
-    CU_ASSERT_EQUAL(pkt, 0);
+    CU_ASSERT_EQUAL(pkt_get_tr(pkt), 0);
     pkt_set_tr(pkt, 37);
-    CU_ASSERT_EQUAL(pkt, 153);
-    pkt_set_tr(pkt, 153);
-    CU_ASSERT_EQUAL(pkt, 153);
     pkt_set_tr(pkt, 235);
-    CU_ASSERT_NOT_EQUAL(pkt, 234);
+    CU_ASSERT_NOT_EQUAL(pkt_get_tr(pkt), 234);
 }
 
 void test_pkt_get_window(void)
@@ -130,15 +127,15 @@ void test_pkt_get_crc2(void)
     pkt_t *pkt2 = pkt_new();
     pkt_t *pkt3 = pkt_new();
     pkt_t *pkt4 = pkt_new();
-    pkt_set_payload(pkt1,"coucou bae",58999);
+    pkt_set_payload(pkt1,"coucou bae",11);
     pkt_set_payload(pkt2,"coucou arnaud",588);
     pkt_set_payload(pkt3,"coucou patrick",37);
     pkt_set_payload(pkt4,"coucou nicki",17);
-    CU_ASSERT_EQUAL("coucou bae",58999);
-    CU_ASSERT_EQUAL("coucou arnaud",588);
-    CU_ASSERT_EQUAL("coucou patrick",37);
-    CU_ASSERT_NOT_EQUAL("coucou nicki",17);
-} */
+    CU_ASSERT_STRING_EQUAL("coucou bae",pkt_get_payload(pkt1));
+    CU_ASSERT_STRING_EQUAL("coucou arnaud",pkt_get_payload(pkt2));
+    CU_ASSERT_STRING_EQUAL("coucou patrick",pkt_get_payload(pkt3));
+    CU_ASSERT_STRING_NOT_EQUAL("coucou nicko",pkt_get_payload(pkt4));
+}*/
 
 void test_pkt_set_type(void)
 {
@@ -154,16 +151,12 @@ void test_pkt_set_type(void)
 void test_pkt_set_tr(void)
 {
     pkt_t *pkt = pkt_new();
-    pkt_set_tr(pkt, 254);
-    CU_ASSERT_EQUAL(pkt, 254);
-    pkt_set_tr(pkt, 18);
-    CU_ASSERT_EQUAL(pkt, 37);
-    pkt_set_tr(pkt, 37);
-    CU_ASSERT_EQUAL(pkt, 153);
-    pkt_set_tr(pkt, 153);
-    CU_ASSERT_EQUAL(pkt, 153);
-    pkt_set_tr(pkt, 224);
-    CU_ASSERT_NOT_EQUAL(pkt, 225);
+    pkt_set_tr(pkt, 1);
+    CU_ASSERT_EQUAL(pkt_get_tr(pkt), 1);
+    pkt_set_tr(pkt, 0);
+    CU_ASSERT_EQUAL(pkt_get_tr(pkt), 0);
+    pkt_set_tr(pkt, 235);
+    CU_ASSERT_NOT_EQUAL(pkt_get_tr(pkt), 234);
 }
 
 void test_pkt_set_window(void)
@@ -243,10 +236,17 @@ void test_pkt_set_crc2(void)
     CU_ASSERT_NOT_EQUAL(459, pkt_get_crc2(pkt4));
 }
 
-/*void test_pkt_set_playload(void){
-    
+void test_pkt_set_playload(void){
+
+    pkt_t *pkt3 = pkt_new();
+    pkt_t *pkt4 = pkt_new();
+
+    pkt_set_payload(pkt3,"coucou patrick",37);
+    pkt_set_payload(pkt4,"coucou nicki",17);
+    CU_ASSERT_STRING_EQUAL("coucou patrick",pkt_get_payload(pkt3));
+    CU_ASSERT_STRING_NOT_EQUAL("coucou nicko",pkt_get_payload(pkt4));    
 }
-*/
+
 
 void test_pkt_type(void)
 {
@@ -378,7 +378,8 @@ int main(void)
         NULL == CU_add_test(pSuite1, "\n\n……… Testing_set_crc1……..\n\n", test_pkt_set_crc1) ||
         NULL == CU_add_test(pSuite1, "\n\n……… Testing_set_crc2……..\n\n", test_pkt_set_crc2) ||
         NULL == CU_add_test(pSuite1, "\n\n……… Testing_get_tr……..\n\n", test_pkt_get_tr) ||
-        NULL == CU_add_test(pSuite1, "\n\n……… Testing_set_tr……..\n\n", test_pkt_set_tr))
+        NULL == CU_add_test(pSuite1, "\n\n……… Testing_set_tr……..\n\n", test_pkt_set_tr) ||
+        NULL == CU_add_test(pSuite1, "\n\n……… Testing_set_playload…..\n\n", test_pkt_set_playload))
 
     {
         CU_cleanup_registry();
