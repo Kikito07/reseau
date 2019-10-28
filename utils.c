@@ -7,6 +7,7 @@
 #include <time.h>
 #include <unistd.h>
 
+// calculate de minimum between two int
 int min(int x, int y) {
   if (x <= y) {
     return x;
@@ -14,6 +15,7 @@ int min(int x, int y) {
   return y;
 }
 
+// fonction that finds addresses
 int real_address(char *address, struct sockaddr_in6 *rval) {
   struct addrinfo hints, *result;
 
@@ -33,10 +35,14 @@ int real_address(char *address, struct sockaddr_in6 *rval) {
   return 0;
 }
 
+/*sends a data packet of length 0 and wait for its ack
+@sock : socket connected to peer
+@seqn : seqnum of last packet send
+@return : return 0 on sucess */
 int end_connection(int sock, int *seqn) {
-  // usefull for poll
+  // variable used for poll
   struct pollfd fds[1];
-  int timeout_msecs = 0;
+  int timeout_msecs = 4000;
   int ret;
   fds[0].fd = sock;
   fds[0].events = POLLIN;
@@ -54,8 +60,6 @@ int end_connection(int sock, int *seqn) {
   if (err != 0) {
     fprintf(stderr, "send fail\n");
   }
-  // printf("after send\n");
-  // printf("inside end_connection\n");
   for (;;) {
     ret = poll(fds, 1, timeout_msecs);
     if (ret == 0) {
@@ -64,42 +68,45 @@ int end_connection(int sock, int *seqn) {
     if (ret > 0) {
       if (fds[0].revents & POLLIN) {
         pkt_receive(ender_list, sock);
-        fds[0].revents = 0;
         if (ender_list->size == 0) {
-          printf("size is 0\n");
           break;
         }
       }
     }
+    fds[0].revents = 0;
     pkt_send(ender, sock);
-    printf("send end connection\n");
     usleep(50);
   }
   free_list(ender_list);
   close(sock);
-  printf("conection ended\n");
   return 0;
 }
+/*sends a packet through a socket*
+@pkt : packet to send
+@sock : socket connected to peer
+@return : -1 if encoding or sending fail 0 on success*/
 
 int pkt_send(pkt_t *pkt, int sock) {
   char buffer[528];
   size_t encoded = 528;
+  // usefull for retransmission
   pkt_set_timestamp(pkt, time(NULL));
   if (pkt_encode(pkt, buffer, &encoded) != 0) {
-    printf("encode fail\n");
+    fprintf(stderr, "encode fail\n");
     return -1;
   }
   if (send(sock, buffer, encoded, 0) == -1) {
-    printf("send fail function\n");
+    fprintf(stderr, "send fail\n");
   }
-  printf("seqnum_send %d\n", pkt->seqnum);
   return 0;
 }
 
-//-1 on error pkt window on succes
+/*routine used when an Ack is received. The method goes through the list and
+ * acknowledges packets then shifts the sender window if possible.
+ * @list : a linked list contaning the sender window
+ * @pkt : the packet received
+ * @return :  return pkt->window*/
 int ack_routine(list_t *list, pkt_t *pkt) {
-  // settings window according to packet
-  // printf("ack_receive : %d\n", pkt->seqnum);
   int index = 0;
   node_t *runner = list->first;
   bool found = false;
@@ -120,14 +127,13 @@ int ack_routine(list_t *list, pkt_t *pkt) {
     runner = runner->next;
     index++;
   }
-
+  // if seqnum receveied is not in window return
   if (found == false) {
     return pkt->window;
   }
   runner = list->first;
   for (int i = 0; i <= index; i++) {
     if (runner->ack == false) {
-      printf("acked : %d\n", runner->pkt->seqnum);
       runner->ack = true;
     }
     runner = runner->next;
@@ -139,41 +145,51 @@ int ack_routine(list_t *list, pkt_t *pkt) {
   return pkt->window;
 }
 
-//-1 on error pkt window on succes
+/*routine used when a packet of type Nack is received. If the packet is in the
+window send it back else return
+@list : the list used to store the window
+@pkt : the packet received
+@sock : a socket connected to the peer
+@return : return 0*/
 int nack_routine(list_t *list, pkt_t *pkt, int sock) {
   // settings window according to packet
-  printf("nack_routine\n");
   node_t *runner = list->first;
   for (int i = 0; i < list->window; i++) {
     if (runner->pkt->seqnum == pkt->seqnum) {
       if (pkt_send(runner->pkt, sock) == -1) {
-        printf("send fail\n");
+        fprintf(stderr, "send fail\n");
       }
     }
     runner = runner->next;
   }
-  return 1;
+  return 0;
 }
-int pkt_receive(list_t *list, int sock) {
 
-  printf("pkt received\n");
+/*fonction called when something can be read from the socket. It then calls the
+ * nack or ack routine depending on the packet received
+ * @list : list used to stock the window
+ * @sock : socked connected to peer
+ * @return : return the window of the received packet on success and
+ * list->window on failure */
+int pkt_receive(list_t *list, int sock) {
   char buffer[528];
   pkt_t decoded;
   int byte_received;
   pkt_status_code err;
   byte_received = recv(sock, buffer, 528, 0);
   if (byte_received == -1) {
-    return -1;
+    fprintf(stderr, "read fail\n");
+    return list->window;
   }
   err = pkt_decode(buffer, byte_received, &decoded);
   if (err != 0) {
-    printf("err decode : %d \n", (int)err);
+    fprintf(stderr, "error in decode\n");
     return list->window;
   }
 
   if (pkt_get_type(&decoded) == PTYPE_DATA) {
-    printf("wrong type\n");
-    return -1;
+    fprintf(stderr, "wrong type received\n");
+    return list->window;
   }
   if (pkt_get_type(&decoded) == PTYPE_ACK) {
 
@@ -182,6 +198,11 @@ int pkt_receive(list_t *list, int sock) {
   return nack_routine(list, &decoded, sock);
 }
 
+/*reads from file descriptor and sends the content through a socket
+@fd : a file descriptor
+@sock : a socket connected to peer
+@return : 0 on success, -1 on failure
+*/
 int read_file_and_send(int fd, int sock) {
 
   // initializing list and seqnum
@@ -191,6 +212,7 @@ int read_file_and_send(int fd, int sock) {
   // filling list
   if (list_fill(list, fd, &seqn) != 0) {
     fprintf(stderr, "error list_fill\n");
+    return -1;
   }
 
   // usefull for poll
@@ -205,26 +227,19 @@ int read_file_and_send(int fd, int sock) {
   // sending first packet
   pkt_send(peek(list), sock);
   for (;;) {
-    printf("inside for loop\n");
-    printf("before poll\n");
     ret = poll(fds, 1, timeout_msecs);
-    printf("afte poll\n");
-    
     if (ret > 0) {
       if (fds[0].revents & POLLIN) {
-        printf("inside pollin\n");
         w_receiver = pkt_receive(list, sock);
         // if receiver is overloaded wait
         if (w_receiver == 0) {
-          printf("window received = 0\n");
           usleep(100);
           w_receiver = 1;
         }
-        printf("before list_fill\n");
         if (list_fill(list, fd, &seqn) == -1) {
           fprintf(stderr, "error list_fill\n");
+          return -1;
         }
-        printf("after list_fill\n");
         if (list_is_empty(list) == 1 && list->marker == true) {
           free(list);
           end_connection(sock, &seqn);
@@ -240,7 +255,6 @@ int read_file_and_send(int fd, int sock) {
       if (runner->ack == false &&
           (uint32_t)time(NULL) - (uint32_t)pkt_get_timestamp(runner->pkt) >
               (uint32_t)1) {
-                printf("seqn = %d\n", runner->pkt->seqnum);
         if (pkt_send(runner->pkt, sock) != -1) {
         }
       }

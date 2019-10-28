@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+// init a list
 list_t *init_list() {
   list_t *list = malloc(sizeof(list_t));
   list->first = NULL;
@@ -15,6 +16,7 @@ list_t *init_list() {
   return list;
 }
 
+// free a list
 int free_list(list_t *list) {
   if (list == NULL) {
     return 0;
@@ -25,7 +27,7 @@ int free_list(list_t *list) {
   free(list);
   return 0;
 }
-
+// add an element at the end of the list
 int list_add(list_t *list, pkt_t *pkt) {
 
   node_t *new = malloc(sizeof(node_t));
@@ -45,6 +47,7 @@ int list_add(list_t *list, pkt_t *pkt) {
   return 0;
 }
 
+// delete the first element of the list
 int delete (list_t *list) {
   if (list == NULL) {
     return -1;
@@ -63,7 +66,7 @@ int delete (list_t *list) {
   }
   return 0;
 }
-
+// peek the first element of the list
 pkt_t *peek(list_t *list) {
   if (list == NULL) {
     return NULL;
@@ -75,6 +78,7 @@ pkt_t *peek(list_t *list) {
   }
 }
 
+// peek the last element of the list
 pkt_t *peek_last(list_t *list) {
   if (list == NULL) {
     return NULL;
@@ -85,7 +89,7 @@ pkt_t *peek_last(list_t *list) {
     return list->last->pkt;
   }
 }
-
+// set list->window
 int set_window(list_t *list, int nbm_window) {
   if (list == NULL) {
     return -1;
@@ -94,24 +98,18 @@ int set_window(list_t *list, int nbm_window) {
   return 0;
 }
 
+// move the sender window if possible
 int list_move_window(list_t *list) {
   if (list == NULL) {
     return -1;
   }
   while (list->first != NULL && list->first->ack == true) {
-    // printf("inside list_move_window\n");
     delete (list);
-    // printf("after delete\n");
   }
-  // printf("out of while loop\n");
-  if (list->first == NULL) {
-    // printf("list->first == NULL\n");
-    return -2;
-  }
-  // printf("before return list_move_window\n");
   return 0;
 }
 
+// return -1 on failure 1 if list is empty 0 otherwise
 int list_is_empty(list_t *list) {
   if (list == NULL) {
     return -1;
@@ -122,6 +120,7 @@ int list_is_empty(list_t *list) {
   return 1;
 }
 
+// debugging function
 void print_list(list_t *list) {
   node_t *runner = list->first;
   while (runner != NULL) {
@@ -129,6 +128,7 @@ void print_list(list_t *list) {
   }
 }
 
+/*read from fd and fill list using seqnum seqn*/
 int list_fill(list_t *list, int fd, int *seqn) {
 
   if (list == NULL) {
@@ -144,14 +144,13 @@ int list_fill(list_t *list, int fd, int *seqn) {
 
   // reading file and filling list
   bytes_r = read(fd, buf_payload, 512);
- 
+
   if (bytes_r == -1) {
-    printf("read fail\n");
+    fprintf(stderr,"read fail\n");
     return -1;
   }
-   if (bytes_r == 0) {
+  if (bytes_r == 0) {
     list->marker = true;
-    printf("bytes_r 0\n");
     return 0;
   }
   pkt_t *pkt = pkt_new();
@@ -160,9 +159,8 @@ int list_fill(list_t *list, int fd, int *seqn) {
   pkt_set_timestamp(pkt, 0);
   pkt_set_window(pkt, 0);
   list_err = list_add(list, pkt);
-  // printf("list size %d\n", list->size);
   if (list_err == -1) {
-    printf("list_add fail\n");
+    fprintf(stderr,"list_add fail\n");
     close(fd);
     return -1;
   }
