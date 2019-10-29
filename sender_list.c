@@ -126,6 +126,7 @@ void print_list(list_t *list) {
   node_t *runner = list->first;
   while (runner != NULL) {
     printf("seq : %d\n", runner->pkt->seqnum);
+    runner = runner -> next;
   }
 }
 
@@ -155,7 +156,7 @@ int list_fill(list_t *list, int fd, int *seqn) {
       list->marker = true;
       return 0;
     }
-    printf("bytes_read %d\n", bytes_r);
+    //printf("bytes_read %d\n", bytes_r);
     pkt_t *pkt = pkt_new();
     pkt_set_payload(pkt, buf_payload, (uint16_t)bytes_r);
     // printf("pkt->payload %d\n", pkt_get_length(pkt));

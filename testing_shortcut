@@ -1,0 +1,2 @@
+./link_sim -p 55554 -P 55555 -l 20 & ./receiver :: 55555
+time ./sender -f first_file.txt ::1 55554

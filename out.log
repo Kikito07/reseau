@@ -1,0 +1,63 @@
+@@ Using random seed: 1572269848
+@@ Using parameters:
+.. port: 55554
+.. forward_port: 55555
+.. delay: 0
+.. jitter: 0
+.. err_rate: 0
+.. cut_rate: 0
+.. loss_rate: 20
+.. seed: 1572269848
+.. link_direction: Forward
+@@ Remote host is ::1 [40380]
+[SEQ   0] Sent packet (Forward).
+[SEQ   1] Sent packet (Reverse).
+[SEQ   1] Dropping packet
+[SEQ   1] Sent packet (Forward).
+[SEQ   2] Sent packet (Reverse).
+[SEQ   2] Dropping packet
+[SEQ   2] Sent packet (Forward).
+[SEQ   3] Sent packet (Reverse).
+[SEQ   3] Sent packet (Forward).
+[SEQ   4] Sent packet (Reverse).
+[SEQ   4] Dropping packet
+[SEQ   4] Sent packet (Forward).
+[SEQ   5] Sent packet (Reverse).
+[SEQ   5] Sent packet (Forward).
+[SEQ   6] Sent packet (Reverse).
+[SEQ   6] Dropping packet
+[SEQ   6] Sent packet (Forward).
+[SEQ   7] Sent packet (Reverse).
+[SEQ   7] Sent packet (Forward).
+[SEQ   8] Sent packet (Reverse).
+[SEQ   8] Dropping packet
+[SEQ   8] Sent packet (Forward).
+[SEQ   9] Sent packet (Reverse).
+[SEQ   9] Dropping packet
+[SEQ   9] Dropping packet
+[SEQ   9] Dropping packet
+[SEQ   9] Sent packet (Forward).
+[SEQ  10] Sent packet (Reverse).
+[SEQ  10] Sent packet (Forward).
+[SEQ  11] Sent packet (Reverse).
+[SEQ  11] Dropping packet
+[SEQ  11] Sent packet (Forward).
+[SEQ  12] Sent packet (Reverse).
+[SEQ  12] Dropping packet
+[SEQ  12] Sent packet (Forward).
+[SEQ  13] Sent packet (Reverse).
+[SEQ  13] Sent packet (Forward).
+[SEQ  14] Sent packet (Reverse).
+[SEQ  14] Sent packet (Forward).
+[SEQ  15] Sent packet (Reverse).
+[SEQ  15] Sent packet (Forward).
+[SEQ  16] Sent packet (Reverse).
+[SEQ  16] Sent packet (Forward).
+[SEQ  17] Sent packet (Reverse).
+[SEQ  17] Sent packet (Forward).
+[SEQ  18] Sent packet (Reverse).
+[SEQ  18] Sent packet (Forward).
+[SEQ  19] Sent packet (Reverse).
+[SEQ 16746771] Sent packet (Forward).
+[SEQ  20] Sent packet (Reverse).
+[SEQ  20] Dropping packet

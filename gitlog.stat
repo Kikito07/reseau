@@ -1,0 +1,293 @@
+commit c51184d3c8dbf77e0867f0bac719246f99171147
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Mon Oct 21 22:02:28 2019 +0200
+
+    seqnum correction
+
+ utils.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+commit 1794f2a44734c95ffb0bd036e7496e65a6befd86
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Mon Oct 21 21:20:23 2019 +0200
+
+    true working state
+
+ utils.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+commit 64efc2eb90d782d26826f7956c53b2a393da0305
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Mon Oct 21 21:00:17 2019 +0200
+
+    adding working state
+
+ packet_implem.c | 14 ++++++++++----
+ sender_list.h   |  1 -
+ utils.c         | 30 +++++++++++++++++++-----------
+ 3 files changed, 29 insertions(+), 16 deletions(-)
+
+commit 6aa123e19c8bbe5c8496dc6883965365c5fa857d
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Mon Oct 21 17:55:50 2019 +0200
+
+    COME ONE
+
+ packet_implem.c    |  2 +-
+ packet_interface.h |  3 +--
+ sender_list.c      | 11 ++++++-----
+ utils.c            | 34 +++++++++++++++++-----------------
+ 4 files changed, 25 insertions(+), 25 deletions(-)
+
+commit 01241a64895af5ed355dbaae773dceade21f0215
+Merge: 806df74 2a384ec
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Mon Oct 21 17:30:06 2019 +0200
+
+    Merge remote-tracking branch 'origin/experimental' into experimental
+
+commit 806df7488b46482fdbdc782118781d309877b124
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Mon Oct 21 17:30:02 2019 +0200
+
+    working on utils
+
+ utils.c | 49 ++++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 38 insertions(+), 11 deletions(-)
+
+commit 2a384ecadf0df74917eb451b89bb570c30fef171
+Merge: d0965ea 9b175db
+Author: Arnaud <arnaudontour@gmail.com>
+Date:   Mon Oct 21 17:27:26 2019 +0200
+
+    Merge remote-tracking branch 'origin/experimental' into experimental
+
+commit d0965ea8f056764ac70b90cd8caa7531383b267d
+Author: Arnaud <arnaudontour@gmail.com>
+Date:   Mon Oct 21 17:27:08 2019 +0200
+
+    list_move_window
+
+ sender_list.c | 21 +++++++++++++++++++++
+ sender_list.h |  2 ++
+ 2 files changed, 23 insertions(+)
+
+commit 9b175dbd8d57ad8bb82e829bcaf834c7992be6aa
+Merge: ce974a0 d10c3eb
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Mon Oct 21 15:37:30 2019 +0200
+
+    Merge remote-tracking branch 'origin/experimental' into experimental
+
+commit ce974a076477dc50b627106f7f3f4c885f99e4db
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Mon Oct 21 15:37:15 2019 +0200
+
+    adding read and receive fonction
+
+ packet_interface.h |   2 +-
+ utils.c            | 129 +++++++++++++++++++++++++++++++++--------------------
+ 2 files changed, 82 insertions(+), 49 deletions(-)
+
+commit d10c3eb6fb8665f4ba70ba329f7be8c319d12136
+Author: Arnaud <arnaudontour@gmail.com>
+Date:   Mon Oct 21 15:35:09 2019 +0200
+
+    amélioration linkedlist
+
+ sender_list.c | 21 +++++++--------------
+ sender_list.h |  5 +++--
+ test_list.c   | 25 ++++++++++++++++++++-----
+ 3 files changed, 30 insertions(+), 21 deletions(-)
+
+commit 371715a96743c35d73e5e7d72c8786b8b5000eaa
+Author: Arnaud <arnaudontour@gmail.com>
+Date:   Mon Oct 21 12:52:15 2019 +0200
+
+    première essai du selective repeat
+
+ utils.c | 35 ++++++++++++++++++++++++++++++++---
+ 1 file changed, 32 insertions(+), 3 deletions(-)
+
+commit 99691f6033dc57299f77ec72a114ea6d995922b0
+Author: Arnaud <arnaudontour@gmail.com>
+Date:   Mon Oct 21 11:47:00 2019 +0200
+
+    Ameliration de la list
+
+ packet_implem.c | 1 +
+ sender_list.c   | 9 +++++++++
+ sender_list.h   | 1 +
+ utils.c         | 5 ++++-
+ 4 files changed, 15 insertions(+), 1 deletion(-)
+
+commit 62a48b17abb3f2bd1d5470dbb60a1cfe153d5f3c
+Author: Arnaud <arnaudontour@gmail.com>
+Date:   Sat Oct 19 11:34:43 2019 +0200
+
+    timestamp
+
+ sender2.h |  0
+ utils.c   | 62 +++++++++++++++++++++++++++++++++++++++++---------------------
+ 2 files changed, 41 insertions(+), 21 deletions(-)
+
+commit f5ed225f917f5ae10a394b8386e799e624f09759
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Sat Oct 19 10:56:12 2019 +0200
+
+    adding list
+
+ packet_interface.h |  1 +
+ sender_list.c      | 65 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ sender_list.h      | 21 ++++++++++++++++++
+ test_list.c        | 40 +++++++++++++++++++++++++++++++++
+ 4 files changed, 127 insertions(+)
+
+commit ecf7d034c4bacd52b92396ad89f5710c950e4adf
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Thu Oct 17 22:33:29 2019 +0200
+
+    adding crc verification when decoding packets
+
+ packet_implem.c    | 38 +++++++++++++-------------------------
+ packet_interface.h | 35 +++++++++++++++++++++++------------
+ testzone.c         | 25 ++++++++++++++++++++++---
+ 3 files changed, 58 insertions(+), 40 deletions(-)
+
+commit 65d3ffe2002dd72517643ac323db72dbb628aa2c
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Thu Oct 17 16:08:22 2019 +0200
+
+    adding crc1 calculation
+
+ packet_implem.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+commit 7ce1d642f8e75df51099fb0ce7573a0680780520
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Thu Oct 17 14:18:30 2019 +0200
+
+    adding working sender
+
+ Makefile.makefile |  11 ++---
+ first_file.txt    |   3 ++
+ sender            | Bin 22872 -> 37624 bytes
+ sender.c          | 118 +++++++++++++++++++++++++++++++++++++++---------------
+ sender.h          |   0
+ sender2.c         | 113 ---------------------------------------------------
+ simple_receiver.c |   5 ++-
+ testzone.c        |  14 +++++++
+ utils.c           |  99 +++++++++++++++++++++++++++++++++++++++++++++
+ utils.h           |   9 +++++
+ 10 files changed, 218 insertions(+), 154 deletions(-)
+
+commit 6563df124939f15abe0f10135214ef5b7355ca37
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Thu Oct 17 09:43:07 2019 +0200
+
+    adding simple_receiver for tests
+
+ packet_implem.c   |   2 +-
+ send              | Bin 22568 -> 18368 bytes
+ send.c            |  79 ------------------------------------------------------
+ sender            | Bin 23072 -> 22872 bytes
+ sender2.c         |  26 +++++-------------
+ simple_receiver.c |  49 +++++++++++++++++++++++++++++++++
+ tests.c           |   3 +--
+ 7 files changed, 57 insertions(+), 102 deletions(-)
+
+commit 67736d3499661f17a65cead755be4c82574c0883
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Wed Oct 16 18:00:28 2019 +0200
+
+    addingsender2
+
+ sender2.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
+
+commit 13d295978fb853905bfaef84b809663b1f74849c
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Wed Oct 16 17:58:44 2019 +0200
+
+    adding send up to date
+
+ send   | Bin 0 -> 22568 bytes
+ sender | Bin 0 -> 23072 bytes
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+
+commit 27497f65e0708867973924ba2d532d5dedc732a1
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Wed Oct 16 17:44:28 2019 +0200
+
+    adding sender
+
+ packet_implem.c |   9 ++++
+ sender2.c       | 127 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 136 insertions(+)
+
+commit 3ab4087c5b4a1c1d302452ba10087f2944ebba7c
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Tue Oct 15 18:35:01 2019 +0200
+
+    tests for sockets
+
+ packet_implem.c |  1 -
+ send.c          | 71 ++++++++++++++++++---------------------------------------
+ sender2.c       |  0
+ sender2.h       |  0
+ 4 files changed, 22 insertions(+), 50 deletions(-)
+
+commit 5a0b7a83ffca3fb289d917f8f2252f1c7e05aef8
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Tue Oct 15 16:14:34 2019 +0200
+
+    adding tests
+
+ tests.c | 99 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 99 insertions(+)
+
+commit eecc0dfe6b797b898df5c7db7891d5b8515ffe5f
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Tue Oct 15 16:10:46 2019 +0200
+
+    cleanning
+
+ "Projet-R\303\251seau/Makefile.makefile" => Makefile.makefile   | 0
+ "Projet-R\303\251seau/README.md"                                | 1 -
+ "Projet-R\303\251seau/packet_implem.c" => packet_implem.c       | 0
+ "Projet-R\303\251seau/packet_interface.h" => packet_interface.h | 0
+ "Projet-R\303\251seau/send.c" => send.c                         | 0
+ "Projet-R\303\251seau/sender.c" => sender.c                     | 0
+ 6 files changed, 1 deletion(-)
+
+commit f3446f951ca63bf37d0a1fe5b532ae6efedd55e1
+Author: TyunyayevN <nikita.tyunyayev@gmail.com>
+Date:   Tue Oct 15 16:07:06 2019 +0200
+
+    change makefile
+
+ .../Makefile.jpg" => "Projet-R\303\251seau/Makefile.makefile"             | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+
+commit 90b983a505f6a545fcf644d0d937c94ca85f1237
+Author: arnaudontour <48843478+arnaudontour@users.noreply.github.com>
+Date:   Tue Oct 15 15:57:53 2019 +0200
+
+    Add files via upload
+
+ "Projet-R\303\251seau/Makefile.jpg"       |   8 +
+ "Projet-R\303\251seau/README.md"          |   1 +
+ "Projet-R\303\251seau/packet_implem.c"    | 303 ++++++++++++++++++++++++++++++
+ "Projet-R\303\251seau/packet_interface.h" | 173 +++++++++++++++++
+ "Projet-R\303\251seau/send.c"             | 106 +++++++++++
+ "Projet-R\303\251seau/sender.c"           |  39 ++++
+ 6 files changed, 630 insertions(+)
+
+commit e93dcb7be06bbe731dd83dd748e650007b80ed18
+Author: Kikito07 <36966638+Kikito07@users.noreply.github.com>
+Date:   Tue Oct 15 15:45:44 2019 +0200
+
+    Initial commit
+
+ README.md | 1 +
+ 1 file changed, 1 insertion(+)

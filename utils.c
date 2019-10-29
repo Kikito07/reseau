@@ -92,7 +92,6 @@ int end_connection(int sock, int *seqn) {
     }
     fds[0].revents = 0;
     pkt_send(ender, sock);
-    usleep(50);
   }
   free_list(ender_list);
   close(sock);
@@ -119,6 +118,8 @@ int pkt_send(pkt_t *pkt, int sock) {
   if (pkt->sent == false) {
     pkt->sent = true;
   }
+  printf("pkt->seqnum : %d\n", pkt->seqnum);
+  printf("pkt->length : %d\n", pkt->length);
   return 0;
 }
 
@@ -143,8 +144,10 @@ int ack_routine(list_t *list, pkt_t *pkt) {
   while (runner != NULL) {
     if (runner->pkt->seqnum == seq_mod) {
       found = true;
-      list->r_timer = min_u(2 * CLOCKS_PER_SEC, 3 * ((0xFFFFFFFF & clock()) -
-                                                     runner->pkt->timestamp));
+      list->r_timer =
+          min_u(2 * CLOCKS_PER_SEC, 3 * ((uint32_t)(0xFFFFFFFF & clock()) -
+                                         runner->pkt->timestamp));
+      // printf("list->r_timer %lu\n", list->r_timer);
       break;
     }
     runner = runner->next;
@@ -157,7 +160,7 @@ int ack_routine(list_t *list, pkt_t *pkt) {
 
   runner = list->first;
   for (int i = 0; i <= index; i++) {
-    if (runner->ack == false) {
+    if (runner->ack == false && runner->pkt->sent == true) {
       runner->ack = true;
     }
     runner = runner->next;
@@ -180,8 +183,9 @@ int nack_routine(list_t *list, pkt_t *pkt, int sock) {
   node_t *runner = list->first;
   for (int i = 0; i < list->window; i++) {
     if (runner->pkt->seqnum == pkt->seqnum) {
-      list->r_timer = min_u(2 * CLOCKS_PER_SEC, 2 * (0xFFFFFFFF & clock()) -
-                                                    runner->pkt->timestamp);
+      list->r_timer =
+          min_u(2 * CLOCKS_PER_SEC, 3 * ((uint32_t)(0xFFFFFFFF & clock()) -
+                                         runner->pkt->timestamp));
       if (pkt_send(runner->pkt, sock) == -1) {
         fprintf(stderr, "send fail\n");
       }
@@ -253,8 +257,8 @@ int read_file_and_send(int fd, int sock) {
   // sending first packet
   pkt_send(peek(list), sock);
   for (;;) {
-    printf("size %d\n", list->size);
-    printf("window : %d\n", list->window);
+    // printf("size %d\n", list->size);
+    // printf("window : %d\n", list->window);
     ret = poll(fds, 1, timeout_msecs);
     if (ret > 0) {
       if (fds[0].revents & POLLIN) {
@@ -278,10 +282,11 @@ int read_file_and_send(int fd, int sock) {
       fds[0].revents = 0;
     }
     node_t *runner = list->first;
+    //print_list(list);
     // printf("r_timer : %lu\n", list->r_timer /  CLOCKS_PER_SEC);
     for (int i = 0; i < list->window; i++) {
-      if ((runner->ack == false &&
-           ((clock() & 0xFFFFFFFF) - runner->pkt->timestamp) > list->r_timer) ||
+      if ((runner->ack == false && ((uint32_t)(clock() & 0xFFFFFFFF) -
+                                    runner->pkt->timestamp) > list->r_timer) ||
           runner->pkt->sent == false) {
         pkt_send(runner->pkt, sock);
       }
