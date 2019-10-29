@@ -51,13 +51,16 @@ int real_address(char *address, struct sockaddr_in6 *rval) {
 int end_connection(int sock, int *seqn) {
   // variable used for poll
   struct pollfd fds[1];
-  int timeout_msecs = 4000;
+  int timeout_msecs = 5000;
   int ret;
   fds[0].fd = sock;
   fds[0].events = POLLIN;
 
   pkt_t *ender = pkt_new();
-  int err;
+  if (ender == NULL) {
+    fprintf(stderr, "malloc fail\n");
+    return -1;
+  }
 
   pkt_set_seqnum(ender, *seqn);
   pkt_set_window(ender, 0);
@@ -66,10 +69,11 @@ int end_connection(int sock, int *seqn) {
   pkt_set_type(ender, PTYPE_DATA);
   list_t *ender_list = init_list();
   list_add(ender_list, ender);
-  err = pkt_send(ender, sock);
-  if (err != 0) {
-    fprintf(stderr, "send fail\n");
-  }
+
+  pkt_send(ender, sock);
+  pkt_send(ender, sock);
+  pkt_send(ender, sock);
+
   for (;;) {
     ret = poll(fds, 1, timeout_msecs);
     if (ret == 0) {
@@ -116,7 +120,8 @@ int pkt_send(pkt_t *pkt, int sock) {
  * acknowledges packets then shifts the sender window if possible.
  * @list : a linked list contaning the sender window
  * @pkt : the packet received
- * @return : return pkt->window on sucess and list->window on failure. It also modifies the retransmission timer*/
+ * @return : return pkt->window on sucess and list->window on failure. It also
+ * modifies the retransmission timer*/
 int ack_routine(list_t *list, pkt_t *pkt) {
   int index = 0;
   node_t *runner = list->first;
@@ -134,10 +139,10 @@ int ack_routine(list_t *list, pkt_t *pkt) {
   while (runner != NULL) {
     if (runner->pkt->seqnum == seq_mod) {
       found = true;
-      list->r_timer = 0.25 * (min_max(CLOCKS_PER_SEC / 200000,
+      list->r_timer = 0.25 * (min_max((uint32_t)5,
                                       3 * ((uint32_t)(clock() / 1000) -
                                            runner->pkt->timestamp),
-                                      4 * (CLOCKS_PER_SEC) / 1000)) +
+                                      (uint32_t)4000)) +
                       0.75 * list->r_timer;
       break;
     }
@@ -226,7 +231,7 @@ int read_file_and_send(int fd, int sock) {
 
   // initializing list and seqnum
   list_t *list = init_list();
-  if(list == NULL){
+  if (list == NULL) {
     return -1;
   }
   int seqn = 0;

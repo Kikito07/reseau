@@ -17,7 +17,7 @@ list_t *init_list() {
   list->size = 0;
   list->window = 1;
   list->marker = false;
-  list->r_timer = 2000;
+  list->r_timer = 1000;
   return list;
 }
 
