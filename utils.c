@@ -139,7 +139,7 @@ int ack_routine(list_t *list, pkt_t *pkt) {
   while (runner != NULL) {
     if (runner->pkt->seqnum == seq_mod) {
       found = true;
-      list->r_timer = 0.25 * (min_max((uint32_t)5,
+      list->r_timer = 0.25 * (min_max((uint32_t)6,
                                       3 * ((uint32_t)(clock() / 1000) -
                                            runner->pkt->timestamp),
                                       (uint32_t)4000)) +
