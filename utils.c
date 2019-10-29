@@ -174,14 +174,10 @@ int nack_routine(list_t *list, pkt_t *pkt, int sock) {
   node_t *runner = list->first;
   for (int i = 0; i < list->window; i++) {
     if (runner->pkt->seqnum == pkt->seqnum) {
-      list->r_timer = 0.25 * (min_max(CLOCKS_PER_SEC / 200000,
-                                      3 * ((uint32_t)(clock() / 1000) -
-                                           runner->pkt->timestamp),
-                                      4 * (CLOCKS_PER_SEC) / 1000)) +
-                      0.75 * list->r_timer;
       if (pkt_send(runner->pkt, sock) == -1) {
         fprintf(stderr, "send fail\n");
       }
+      break;
     }
     runner = runner->next;
   }
@@ -230,6 +226,9 @@ int read_file_and_send(int fd, int sock) {
 
   // initializing list and seqnum
   list_t *list = init_list();
+  if(list == NULL){
+    return -1;
+  }
   int seqn = 0;
 
   // filling list
