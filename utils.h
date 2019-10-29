@@ -1,4 +1,4 @@
-#include "packet_interface.h"
+#include "packet.h"
 #include "sender_list.h"
 #include <netdb.h>
 #include <stddef.h>

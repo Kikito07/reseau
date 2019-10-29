@@ -7,6 +7,8 @@
 #include <time.h>
 #include <stdbool.h>
 
+//------------Trouver sur inginious-----------------
+
 /* Types de paquets */
 typedef enum {
   PTYPE_DATA = 1,
